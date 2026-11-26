@@ -1,0 +1,3042 @@
+<!DOCTYPE html>
+<html lang="mk" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Нутри Тракер" />
+  <meta name="theme-color" content="#090d16" />
+  <title>Дневен Нутри Тракер</title>
+
+  <link id="appleTouchIcon" rel="apple-touch-icon" />
+  <link id="webManifestLink" rel="manifest" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    // Configure Tailwind dark mode and typography tokens
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            slateDark: {
+              950: '#090d16',
+              900: '#101624',
+              850: '#161e31',
+              800: '#1e293b',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Prevent oversized SVG rendering if external stylesheets load slowly */
+    svg {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    :root {
+      --bg-page: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-subcard: #f8fafc;
+      --bg-input: #f8fafc;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-soft: #e2e8f0;
+      --emerald: #059669;
+      --emerald-bright: #10b981;
+      --sky: #0284c7;
+      --amber: #d97706;
+      --rose: #e11d48;
+      --cyan: #0891b2;
+    }
+
+    html.dark {
+      --bg-page: #090d16;
+      --bg-card: #101624;
+      --bg-subcard: #161e31;
+      --bg-input: #161e31;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-soft: #1e293b;
+      --emerald: #10b981;
+      --emerald-bright: #34d399;
+      --sky: #38bdf8;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+      --cyan: #22d3ee;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app-container {
+      max-width: 32rem;
+      margin: 0 auto;
+      padding: 0.75rem 1rem 2.5rem;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .subcard {
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-soft);
+      border-radius: 1rem;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 0.65rem;
+      background-color: rgba(148, 163, 184, 0.22);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .icon-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.85rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .btn-primary {
+      background-color: #059669;
+      color: #ffffff;
+      border: none;
+      border-radius: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-subcard);
+      color: var(--text-main);
+      border: 1px solid var(--border-soft);
+      border-radius: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    @media (min-width: 640px) {
+      .modal-backdrop.open {
+        align-items: center;
+        padding: 1rem;
+      }
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 32rem;
+      max-height: 92vh;
+      overflow-y: auto;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 1.5rem 1.5rem 0 0;
+      padding: 1.25rem;
+    }
+
+    @media (min-width: 640px) {
+      .modal-sheet {
+        border-radius: 1.5rem;
+      }
+    }
+
+    input, select {
+      background-color: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border-soft);
+      border-radius: 0.85rem;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      inset-inline: 0;
+      z-index: 30;
+      background-color: rgba(9, 13, 22, 0.92);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-soft);
+      padding: 0.75rem 1rem calc(env(safe-area-inset-bottom) + 0.75rem);
+    }
+
+    html:not(.dark) .bottom-bar {
+      background-color: rgba(255, 255, 255, 0.92);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- Top navigation header without backup or PWA/phone buttons -->
+    <header style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:1rem;">
+      <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
+        <button id="btnOpenProfile" type="button" aria-label="Мој акаунт"
+          style="width:2.5rem; height:2.5rem; border-radius:1rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.35); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; cursor:pointer; padding:0;">
+          <img id="headerAvatarImg" alt="Профилна слика" style="width:100%; height:100%; object-fit:cover; display:none;" />
+          <span id="headerAvatarFallback" style="font-size:0.9rem; font-weight:800; color:#10b981;">М</span>
+        </button>
+        <div style="min-width:0;">
+          <h1 id="headerUserName" style="margin:0; font-size:1.1rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            Нутри Тракер
+          </h1>
+          <p id="headerUserGoalSub" style="margin:0; font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            Личен дневник за калории и протеини
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
+        <button id="btnOpenMonthlyStats" type="button" aria-label="Месечна статистика" class="icon-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </button>
+
+        <button id="btnThemeToggle" type="button" aria-label="Промени тема" class="icon-btn">
+          <svg id="iconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
+        <button id="btnOpenGoals" type="button" class="btn-primary" style="padding:0.65rem 0.85rem; font-size:0.75rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          Цели
+        </button>
+      </div>
+    </header>
+
+    <!-- Date navigation bar -->
+    <section aria-label="Избор на датум" class="card" style="padding:0.5rem; margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between;">
+      <button id="btnPrevDay" type="button" aria-label="Претходен ден" class="icon-btn" style="border:none; background:transparent;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span id="selectedDateLabel" style="font-size:0.9rem; font-weight:700;">Денес</span>
+          <button id="btnToday" type="button"
+            style="display:none; padding:0.15rem 0.5rem; font-size:0.7rem; font-weight:600; border-radius:0.5rem; background:rgba(16,185,129,0.16); color:#10b981; border:none; cursor:pointer;">
+            Врати на денес
+          </button>
+        </div>
+        <span id="selectedDateSub" style="font-size:0.75rem; color:var(--text-muted);"></span>
+      </div>
+
+      <button id="btnNextDay" type="button" aria-label="Следен ден" class="icon-btn" style="border:none; background:transparent;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </section>
+
+    <!-- Daily macro, fiber, and water summary -->
+    <section aria-label="Дневен преглед" class="card" style="padding:1.25rem; margin-bottom:1rem;">
+      <div style="margin-bottom:1.25rem;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:0.5rem;">
+          <div>
+            <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted);">Калории</span>
+            <div style="margin-top:0.15rem;">
+              <span id="calConsumed" style="font-size:1.85rem; font-weight:800;">0</span>
+              <span style="font-size:0.85rem; color:var(--text-muted);">/ <span id="calTarget">2200</span> kcal</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:0.72rem; color:var(--text-muted); display:block;">Останато</span>
+            <span id="calRemaining" style="font-size:0.95rem; font-weight:700; color:#10b981;">2200 kcal</span>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div id="calProgress" class="progress-fill" style="width:0%; background:linear-gradient(90deg,#10b981,#2dd4bf);"></div>
+        </div>
+      </div>
+
+      <div class="subcard" style="padding:0.85rem; margin-bottom:1rem;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:0.5rem;">
+          <div>
+            <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#38bdf8;">Протеини (Дневна цел)</span>
+            <div style="margin-top:0.15rem;">
+              <span id="proConsumed" style="font-size:1.5rem; font-weight:800;">0</span>
+              <span style="font-size:0.85rem; color:var(--text-muted);">/ <span id="proTarget">175</span> г</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:0.72rem; color:var(--text-muted); display:block;">Останато</span>
+            <span id="proRemaining" style="font-size:0.85rem; font-weight:700; color:#38bdf8;">175 г</span>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div id="proProgress" class="progress-fill" style="width:0%; background:linear-gradient(90deg,#0ea5e9,#3b82f6);"></div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+        <div class="subcard" style="padding:0.75rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.35rem;">
+            <span style="font-weight:700; color:#fbbf24;">Јаглехидрати</span>
+            <span style="color:var(--text-muted);"><strong id="carbConsumed">0</strong>/<span id="carbTarget">220</span>г</span>
+          </div>
+          <div class="progress-track" style="height:0.45rem; margin-bottom:0.3rem;">
+            <div id="carbProgress" class="progress-fill" style="width:0%; background:#f59e0b;"></div>
+          </div>
+          <span id="carbRemaining" style="font-size:0.7rem; color:var(--text-muted); display:block;">Останато: 220 г</span>
+        </div>
+
+        <div class="subcard" style="padding:0.75rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.35rem;">
+            <span style="font-weight:700; color:#fb7185;">Масти</span>
+            <span style="color:var(--text-muted);"><strong id="fatConsumed">0</strong>/<span id="fatTarget">65</span>г</span>
+          </div>
+          <div class="progress-track" style="height:0.45rem; margin-bottom:0.3rem;">
+            <div id="fatProgress" class="progress-fill" style="width:0%; background:#f43f5e;"></div>
+          </div>
+          <span id="fatRemaining" style="font-size:0.7rem; color:var(--text-muted); display:block;">Останато: 65 г</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:0.85rem; padding:0.55rem 0.85rem; border-radius:1rem; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.25); display:flex; align-items:center; justify-content:space-between; font-size:0.75rem;">
+        <span style="font-weight:700; color:#34d399;">Влакна (Диететски влакна)</span>
+        <span style="font-weight:800; color:#34d399;"><span id="fiberConsumed">0</span> г</span>
+      </div>
+
+      <div style="padding:0.75rem; border-radius:1rem; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.28); display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+        <div style="min-width:0; flex:1;">
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem; margin-bottom:0.35rem;">
+            <span style="font-weight:700; color:#22d3ee; display:inline-flex; align-items:center; gap:0.35rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+              </svg>
+              Вода
+            </span>
+            <span style="font-weight:600; color:var(--text-muted);">
+              <strong id="waterConsumed" style="color:#22d3ee;">0</strong> / <span id="waterTarget">2500</span> мл
+            </span>
+          </div>
+          <div class="progress-track" style="height:0.45rem;">
+            <div id="waterProgress" class="progress-fill" style="width:0%; background:linear-gradient(90deg,#06b6d4,#38bdf8);"></div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+          <button id="btnWaterMinus" type="button" aria-label="Намали вода за 250 мл"
+            style="width:2rem; height:2rem; border-radius:0.75rem; background:var(--bg-card); border:1px solid rgba(34,211,238,0.35); color:#22d3ee; font-weight:700; cursor:pointer;">−</button>
+          <button id="btnWaterPlus" type="button"
+            style="height:2rem; padding:0 0.65rem; border-radius:0.75rem; background:#0891b2; color:#fff; border:none; font-weight:700; font-size:0.75rem; cursor:pointer;">+250 мл</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- International & Balkan food database shortcut -->
+    <section aria-label="Меѓународна база на храна" style="margin-bottom:1.25rem;">
+      <button id="btnOpenFoodDbTop" type="button" class="card"
+        style="width:100%; padding:0.9rem 1rem; border-color:rgba(16,185,129,0.4); display:flex; align-items:center; justify-content:space-between; gap:0.75rem; text-align:left; cursor:pointer;">
+        <div style="min-width:0;">
+          <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:#10b981;">Меѓународна и балканска база</div>
+          <div style="font-size:0.88rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">13 категории • По грамажа (g/ml) или по парче</div>
+        </div>
+        <span class="btn-primary" style="padding:0.45rem 0.75rem; font-size:0.75rem; flex-shrink:0;">Отвори база</span>
+      </button>
+    </section>
+
+    <!-- Quick presets section -->
+    <section aria-label="Брз внес" style="margin-bottom:1.5rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+        <div>
+          <h2 style="margin:0; font-size:0.9rem; font-weight:700;">Брз внес</h2>
+          <p style="margin:0; font-size:0.7rem; color:var(--text-muted);">Допри за веднаш да додадеш во денот</p>
+        </div>
+        <button id="btnManagePresets" type="button" class="btn-secondary" style="padding:0.4rem 0.75rem; font-size:0.75rem;">
+          + Нов шаблон
+        </button>
+      </div>
+
+      <div id="presetSearchWrapper" style="margin-bottom:0.65rem;">
+        <input id="presetSearchInput" type="search" placeholder="Пребарај шаблони..." style="width:100%;" />
+      </div>
+
+      <div id="presetsContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;"></div>
+    </section>
+
+    <!-- Daily entries log -->
+    <section aria-label="Внесени оброци денес">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; gap:0.5rem;">
+        <h2 style="margin:0; font-size:0.9rem; font-weight:700;">
+          Внесено за денот (<span id="entriesCount">0</span>)
+        </h2>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <button id="btnCopyYesterdayTop" type="button"
+            style="display:none; padding:0.4rem 0.65rem; border-radius:0.75rem; background:rgba(2,132,199,0.16); color:#38bdf8; border:none; font-size:0.75rem; font-weight:600; cursor:pointer;">
+            Копирај од вчера
+          </button>
+          <button id="btnAddCustomTop" type="button"
+            style="padding:0.4rem 0.75rem; border-radius:0.75rem; background:rgba(16,185,129,0.16); color:#10b981; border:none; font-size:0.75rem; font-weight:600; cursor:pointer;">
+            + Додај оброк
+          </button>
+        </div>
+      </div>
+
+      <div id="entriesContainer" style="display:flex; flex-direction:column; gap:1rem;"></div>
+    </section>
+  </div>
+
+  <!-- Fixed bottom action bar -->
+  <div class="bottom-bar">
+    <div style="max-width:32rem; margin:0 auto; display:flex; align-items:center; gap:0.5rem;">
+      <button id="btnOpenFoodDbBottom" type="button" class="btn-secondary" style="padding:0.85rem 0.85rem; font-size:0.78rem; flex-shrink:0;">
+        База храна
+      </button>
+      <button id="btnOpenBarcodeModal" type="button" aria-label="Скенирај баркод" class="btn-secondary" style="padding:0.85rem 0.85rem; font-size:0.78rem; flex-shrink:0;">
+        Баркод
+      </button>
+      <button id="btnOpenEntryModal" type="button" class="btn-primary" style="flex:1; padding:0.85rem 1rem; font-size:0.85rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Додај оброк
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast notification with Undo -->
+  <div id="toast" style="position:fixed; top:1rem; left:50%; transform:translate(-50%, -0.75rem); z-index:50; pointer-events:none; opacity:0; transition:all 0.2s ease; max-width:92vw;">
+    <div style="padding:0.6rem 1rem; border-radius:1rem; background:#0f172a; color:#f8fafc; font-size:0.78rem; font-weight:600; box-shadow:0 12px 28px rgba(0,0,0,0.35); display:flex; align-items:center; gap:0.6rem;">
+      <span style="width:0.5rem; height:0.5rem; border-radius:9999px; background:#34d399; flex-shrink:0;"></span>
+      <span id="toastMessage">Зачувано!</span>
+      <button id="toastUndoBtn" type="button"
+        style="display:none; padding:0.2rem 0.6rem; border-radius:0.5rem; background:#10b981; color:#090d16; font-weight:800; font-size:0.7rem; border:none; cursor:pointer;">
+        Врати (Undo)
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: 13-category international & Balkan food database -->
+  <div id="foodDbModal" class="modal-backdrop">
+    <div class="modal-sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+        <div>
+          <h3 style="margin:0; font-size:1.1rem; font-weight:800;">База на храна и намирници</h3>
+          <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">13 категории • внес по грамажа (g/ml) или по парче</p>
+        </div>
+        <button type="button" data-close-modal="foodDbModal" class="icon-btn">✕</button>
+      </div>
+
+      <input id="foodDbSearchInput" type="search" placeholder="Пребарај намирница или подкатегорија..." style="width:100%; margin-bottom:0.65rem;" />
+
+      <div style="margin-bottom:0.65rem;">
+        <label for="foodDbCategorySelect" style="display:block; font-size:0.7rem; font-weight:700; color:var(--text-muted); margin-bottom:0.25rem;">Категорија (1–13)</label>
+        <select id="foodDbCategorySelect" style="width:100%; font-weight:700;">
+          <option value="ALL">Сите категории</option>
+        </select>
+      </div>
+
+      <div id="foodDbSubcategoriesBar" class="no-scrollbar" style="display:flex; gap:0.4rem; overflow-x:auto; padding-bottom:0.4rem; margin-bottom:0.65rem;"></div>
+      <div id="foodDbListContainer" style="display:flex; flex-direction:column; gap:0.45rem; max-height:14rem; overflow-y:auto; margin-bottom:0.85rem;"></div>
+
+      <div id="foodDbConfigurator" class="subcard" style="display:none; padding:0.9rem; border-color:rgba(16,185,129,0.45);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; margin-bottom:0.65rem;">
+          <div>
+            <div id="selectedFoodName" style="font-size:0.88rem; font-weight:800;">Намирница</div>
+            <div id="selectedFoodMeta" style="font-size:0.72rem; color:var(--text-muted);">Категорија • Подкатегорија</div>
+          </div>
+          <span style="padding:0.15rem 0.45rem; border-radius:0.5rem; background:rgba(16,185,129,0.16); color:#10b981; font-size:0.65rem; font-weight:700;">На 100g</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem; margin-bottom:0.65rem;">
+          <button id="btnModeGrams" type="button" class="btn-primary" style="padding:0.5rem; font-size:0.75rem;">По грамажа (g / ml)</button>
+          <button id="btnModeUnit" type="button" class="btn-secondary" style="padding:0.5rem; font-size:0.75rem;">По парче / единица</button>
+        </div>
+
+        <div id="panelModeGrams" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:0.65rem;">
+          <label for="foodDbGramsInput" style="font-size:0.78rem; font-weight:600;">Количина (<span id="foodDbUnitLabel">g</span>):</label>
+          <input id="foodDbGramsInput" type="text" inputmode="decimal" value="150" class="decimal-input" style="width:7rem; text-align:right; font-weight:800;" />
+        </div>
+
+        <div id="panelModeUnit" style="display:none; margin-bottom:0.65rem;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:0.5rem;">
+            <label for="foodDbPiecesInput" style="font-size:0.78rem; font-weight:600;">Број на парчиња (<span id="foodDbUnitName">парче</span>):</label>
+            <input id="foodDbPiecesInput" type="text" inputmode="decimal" value="1" class="decimal-input" style="width:7rem; text-align:right; font-weight:800;" />
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:0.35rem;">
+            <label for="foodDbAvgWeightInput" style="font-size:0.75rem; font-weight:600;">Тежина по 1 парче (g) — рачна измена:</label>
+            <input id="foodDbAvgWeightInput" type="text" inputmode="decimal" value="120" class="decimal-input" style="width:7rem; text-align:right; font-weight:800; color:#38bdf8;" />
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted);">
+            <span>Вкупна тежина:</span>
+            <strong id="foodDbCalculatedTotalGrams">120 g</strong>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:0.3rem; text-align:center; margin-bottom:0.65rem;">
+          <div class="card" style="padding:0.4rem; border-radius:0.75rem;">
+            <div style="font-size:0.62rem; color:var(--text-muted);">Калории</div>
+            <div id="calcFoodKcal" style="font-size:0.75rem; font-weight:800; color:#10b981;">0</div>
+          </div>
+          <div class="card" style="padding:0.4rem; border-radius:0.75rem;">
+            <div style="font-size:0.62rem; color:var(--text-muted);">Протеин</div>
+            <div id="calcFoodPro" style="font-size:0.75rem; font-weight:800; color:#38bdf8;">0g</div>
+          </div>
+          <div class="card" style="padding:0.4rem; border-radius:0.75rem;">
+            <div style="font-size:0.62rem; color:var(--text-muted);">Јагл.</div>
+            <div id="calcFoodCarb" style="font-size:0.75rem; font-weight:800; color:#fbbf24;">0g</div>
+          </div>
+          <div class="card" style="padding:0.4rem; border-radius:0.75rem;">
+            <div style="font-size:0.62rem; color:var(--text-muted);">Масти</div>
+            <div id="calcFoodFat" style="font-size:0.75rem; font-weight:800; color:#fb7185;">0g</div>
+          </div>
+          <div class="card" style="padding:0.4rem; border-radius:0.75rem;">
+            <div style="font-size:0.62rem; color:var(--text-muted);">Влакна</div>
+            <div id="calcFoodFiber" style="font-size:0.75rem; font-weight:800; color:#2dd4bf;">0g</div>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; margin-bottom:0.65rem;">
+          <label for="foodDbMealCategory" style="font-size:0.78rem; font-weight:600;">Додај во оброк:</label>
+          <select id="foodDbMealCategory" style="font-weight:700;">
+            <option value="Појадок">Појадок</option>
+            <option value="Ручек">Ручек</option>
+            <option value="Вечера">Вечера</option>
+            <option value="Ужина/Суплементи">Ужина / Суплементи</option>
+          </select>
+        </div>
+
+        <button id="btnAddSelectedFoodToLog" type="button" class="btn-primary" style="width:100%; padding:0.75rem; font-size:0.8rem;">
+          + Додај во дневниот дневник
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add / Edit meal entry -->
+  <div id="entryModal" class="modal-backdrop">
+    <div class="modal-sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <h3 id="entryModalTitle" style="margin:0; font-size:1.1rem; font-weight:800;">Нов внес</h3>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <button id="btnScanInsideEntry" type="button" class="btn-secondary" style="padding:0.35rem 0.7rem; font-size:0.75rem; color:#10b981;">Скенирај</button>
+          <button type="button" data-close-modal="entryModal" class="icon-btn">✕</button>
+        </div>
+      </div>
+
+      <div id="barcodePortionBox" style="display:none; margin-bottom:1rem; padding:0.75rem; border-radius:1rem; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35);">
+        <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.4rem;">
+          <strong style="color:#10b981;">Скениран производ (вредности на 100г)</strong>
+          <span id="scannedBarcodeCode" style="font-family:monospace; color:var(--text-muted);"></span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <label for="entryPortionGrams" style="font-size:0.75rem; font-weight:600;">Количина (г / мл):</label>
+          <input id="entryPortionGrams" type="text" inputmode="decimal" value="100" class="decimal-input" style="width:6rem; font-weight:700;" />
+        </div>
+      </div>
+
+      <form id="entryForm" style="display:flex; flex-direction:column; gap:0.85rem;">
+        <input type="hidden" id="entryId" />
+        <input type="hidden" id="entryScannedBarcode" />
+
+        <div>
+          <label for="entryName" style="display:block; font-size:0.75rem; font-weight:600; margin-bottom:0.35rem;">Назив на оброк или суплемент *</label>
+          <input id="entryName" type="text" required placeholder="пр. Пилешки гради 200г или Креатин 6г" style="width:100%;" />
+        </div>
+
+        <div>
+          <label for="entryCategory" style="display:block; font-size:0.75rem; font-weight:600; margin-bottom:0.35rem;">Категорија</label>
+          <select id="entryCategory" style="width:100%;">
+            <option value="Појадок">Појадок</option>
+            <option value="Ручек">Ручек</option>
+            <option value="Вечера">Вечера</option>
+            <option value="Ужина/Суплементи">Ужина / Суплементи</option>
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
+          <div>
+            <label for="entryCalories" style="display:block; font-size:0.75rem; font-weight:600; margin-bottom:0.35rem;">Калории (kcal) *</label>
+            <input id="entryCalories" type="text" inputmode="decimal" required placeholder="0" class="decimal-input" style="width:100%;" />
+          </div>
+          <div>
+            <label for="entryProtein" style="display:block; font-size:0.75rem; font-weight:600; color:#38bdf8; margin-bottom:0.35rem;">Протеини (г) *</label>
+            <input id="entryProtein" type="text" inputmode="decimal" required placeholder="0" class="decimal-input" style="width:100%;" />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
+          <div>
+            <label for="entryCarbs" style="display:block; font-size:0.72rem; font-weight:600; color:#fbbf24; margin-bottom:0.3rem;">Јаглехидрати (г)</label>
+            <input id="entryCarbs" type="text" inputmode="decimal" placeholder="0" class="decimal-input" style="width:100%;" />
+          </div>
+          <div>
+            <label for="entryFats" style="display:block; font-size:0.72rem; font-weight:600; color:#fb7185; margin-bottom:0.3rem;">Масти (г)</label>
+            <input id="entryFats" type="text" inputmode="decimal" placeholder="0" class="decimal-input" style="width:100%;" />
+          </div>
+          <div>
+            <label for="entryFiber" style="display:block; font-size:0.72rem; font-weight:600; color:#2dd4bf; margin-bottom:0.3rem;">Влакна (г)</label>
+            <input id="entryFiber" type="text" inputmode="decimal" placeholder="0" class="decimal-input" style="width:100%;" />
+          </div>
+        </div>
+
+        <label id="saveAsPresetWrapper" class="subcard" style="padding:0.7rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input id="saveAsPresetCheckbox" type="checkbox" style="width:1rem; height:1rem; accent-color:#059669;" />
+          <span style="font-size:0.75rem; font-weight:500;">Зачувај го и во „Брз внес“ за идни денови</span>
+        </label>
+
+        <div style="display:flex; gap:0.6rem; padding-top:0.25rem;">
+          <button type="button" data-close-modal="entryModal" class="btn-secondary" style="flex:1; padding:0.75rem; font-size:0.85rem;">Откажи</button>
+          <button type="submit" class="btn-primary" style="flex:1; padding:0.75rem; font-size:0.85rem;">Зачувај</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Daily goals & TDEE calculator -->
+  <div id="goalsModal" class="modal-backdrop">
+    <div class="modal-sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+        <div>
+          <h3 style="margin:0; font-size:1.1rem; font-weight:800;">Дневни цели</h3>
+          <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">Внеси ги рачно или пресметај преку TDEE калкулаторот</p>
+        </div>
+        <button type="button" data-close-modal="goalsModal" class="icon-btn">✕</button>
+      </div>
+
+      <button id="btnToggleTdeeCalc" type="button"
+        style="width:100%; margin-bottom:0.75rem; padding:0.65rem 0.85rem; border-radius:1rem; background:rgba(2,132,199,0.16); border:1px solid rgba(56,189,248,0.35); color:#38bdf8; font-size:0.78rem; font-weight:700; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+        <span>Автоматски TDEE калкулатор (калории и протеини)</span>
+        <span id="tdeeChevron">▼</span>
+      </button>
+
+      <div id="tdeeCalcPanel" class="subcard" style="display:none; padding:0.85rem; margin-bottom:0.85rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.5rem;">
+          <div>
+            <label for="tdeeGender" style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.2rem;">Пол</label>
+            <select id="tdeeGender" style="width:100%;">
+              <option value="male">Машки</option>
+              <option value="female">Женски</option>
+            </select>
+          </div>
+          <div>
+            <label for="tdeeAge" style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.2rem;">Возраст (год.)</label>
+            <input id="tdeeAge" type="text" inputmode="numeric" value="28" class="decimal-input" style="width:100%;" />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.5rem;">
+          <div>
+            <label for="tdeeWeight" style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.2rem;">Тежина (кг)</label>
+            <input id="tdeeWeight" type="text" inputmode="decimal" value="80" class="decimal-input" style="width:100%;" />
+          </div>
+          <div>
+            <label for="tdeeHeight" style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.2rem;">Висина (цм)</label>
+            <input id="tdeeHeight" type="text" inputmode="decimal" value="180" class="decimal-input" style="width:100%;" />
+          </div>
+        </div>
+
+        <div style="margin-bottom:0.5rem;">
+          <label for="tdeeActivity" style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.2rem;">Ниво на физичка активност</label>
+          <select id="tdeeActivity" style="width:100%;">
+            <option value="1.2">Седечки начин на живот (без вежбање)</option>
+            <option value="1.375">Лесна активност (1–3 тренинзи неделно)</option>
+            <option value="1.55" selected>Умерена активност (3–5 тренинзи неделно)</option>
+            <option value="1.725">Висока активност (6–7 тренинзи неделно)</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:0.6rem;">
+          <label for="tdeeGoalType" style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.2rem;">Твоја цел</label>
+          <select id="tdeeGoalType" style="width:100%;">
+            <option value="cut">Слабеење / Дефиниција (−450 kcal)</option>
+            <option value="maintain">Одржување тежина</option>
+            <option value="bulk" selected>Мускулна маса (+300 kcal)</option>
+          </select>
+        </div>
+
+        <button id="btnCalculateTdee" type="button" class="btn-primary" style="width:100%; padding:0.6rem; font-size:0.78rem; background:#0284c7;">
+          Пресметај и пополни полиња долу
+        </button>
+      </div>
+
+      <form id="goalsForm" style="display:flex; flex-direction:column; gap:0.75rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
+          <div>
+            <label for="goalCalories" style="display:block; font-size:0.75rem; font-weight:600; margin-bottom:0.3rem;">Калории (kcal)</label>
+            <input id="goalCalories" type="text" inputmode="decimal" required class="decimal-input" style="width:100%; font-weight:700;" />
+          </div>
+          <div>
+            <label for="goalProtein" style="display:block; font-size:0.75rem; font-weight:600; color:#38bdf8; margin-bottom:0.3rem;">Протеини (г)</label>
+            <input id="goalProtein" type="text" inputmode="decimal" required class="decimal-input" style="width:100%; font-weight:700;" />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
+          <div>
+            <label for="goalCarbs" style="display:block; font-size:0.75rem; font-weight:600; color:#fbbf24; margin-bottom:0.3rem;">Јаглехидрати (г)</label>
+            <input id="goalCarbs" type="text" inputmode="decimal" required class="decimal-input" style="width:100%; font-weight:700;" />
+          </div>
+          <div>
+            <label for="goalFats" style="display:block; font-size:0.75rem; font-weight:600; color:#fb7185; margin-bottom:0.3rem;">Масти (г)</label>
+            <input id="goalFats" type="text" inputmode="decimal" required class="decimal-input" style="width:100%; font-weight:700;" />
+          </div>
+        </div>
+
+        <div>
+          <label for="goalWater" style="display:block; font-size:0.75rem; font-weight:600; color:#22d3ee; margin-bottom:0.3rem;">Дневна цел за вода (мл)</label>
+          <input id="goalWater" type="text" inputmode="numeric" required class="decimal-input" style="width:100%; font-weight:700;" />
+        </div>
+
+        <div style="display:flex; gap:0.6rem; padding-top:0.25rem;">
+          <button type="button" data-close-modal="goalsModal" class="btn-secondary" style="flex:1; padding:0.75rem; font-size:0.85rem;">Откажи</button>
+          <button type="submit" class="btn-primary" style="flex:1; padding:0.75rem; font-size:0.85rem;">Зачувај цели</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Quick presets manager -->
+  <div id="presetsModal" class="modal-backdrop">
+    <div class="modal-sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <div>
+          <h3 style="margin:0; font-size:1.1rem; font-weight:800;">Шаблони за брз внес</h3>
+          <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">Додај, уреди или избриши оброци и суплементи</p>
+        </div>
+        <button type="button" data-close-modal="presetsModal" class="icon-btn">✕</button>
+      </div>
+
+      <form id="presetForm" class="subcard" style="padding:0.85rem; margin-bottom:1rem; display:flex; flex-direction:column; gap:0.6rem;">
+        <input type="hidden" id="presetEditId" />
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span id="presetFormTitle" style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:#10b981;">Додај нов шаблон</span>
+          <button id="btnCancelPresetEdit" type="button" style="display:none; font-size:0.7rem; background:none; border:none; color:var(--text-muted); cursor:pointer;">Откажи уредување</button>
+        </div>
+        <input id="presetName" type="text" required placeholder="Назив (пр. Протеински пудинг)" style="width:100%;" />
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+          <select id="presetCategory" style="width:100%;">
+            <option value="Ужина/Суплементи">Ужина / Суплементи</option>
+            <option value="Појадок">Појадок</option>
+            <option value="Ручек">Ручек</option>
+            <option value="Вечера">Вечера</option>
+          </select>
+          <input id="presetCalories" type="text" inputmode="decimal" required placeholder="Калории (kcal)" class="decimal-input" style="width:100%;" />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.45rem;">
+          <input id="presetProtein" type="text" inputmode="decimal" required placeholder="Протеин (г)" class="decimal-input" style="width:100%;" />
+          <input id="presetCarbs" type="text" inputmode="decimal" placeholder="Јагл. (г)" class="decimal-input" style="width:100%;" />
+          <input id="presetFats" type="text" inputmode="decimal" placeholder="Масти (г)" class="decimal-input" style="width:100%;" />
+        </div>
+
+        <button id="btnSubmitPreset" type="submit" class="btn-primary" style="width:100%; padding:0.65rem; font-size:0.78rem;">
+          + Зачувај шаблон
+        </button>
+      </form>
+
+      <div style="font-size:0.75rem; font-weight:600; color:var(--text-muted); margin-bottom:0.4rem;">Постоечки шаблони</div>
+      <div id="presetsManageList" style="display:flex; flex-direction:column; gap:0.45rem; max-height:13rem; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: User profile -->
+  <div id="profileModal" class="modal-backdrop">
+    <div class="modal-sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <div>
+          <h3 style="margin:0; font-size:1.1rem; font-weight:800;">Мој акаунт</h3>
+          <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">Постави профилна слика и лично име</p>
+        </div>
+        <button type="button" data-close-modal="profileModal" class="icon-btn">✕</button>
+      </div>
+
+      <form id="profileForm" style="display:flex; flex-direction:column; gap:0.85rem;">
+        <div class="subcard" style="padding:0.85rem; display:flex; align-items:center; gap:0.85rem;">
+          <div style="width:4rem; height:4rem; border-radius:1rem; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.35); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+            <img id="profilePreviewImg" alt="Профил" style="width:100%; height:100%; object-fit:cover; display:none;" />
+            <span id="profilePreviewFallback" style="font-size:1.5rem; font-weight:800; color:#10b981;">М</span>
+          </div>
+          <div style="flex:1;">
+            <label class="btn-primary" style="padding:0.45rem 0.8rem; font-size:0.75rem; margin-bottom:0.35rem;">
+              Прикачи слика
+              <input id="inputProfileAvatar" type="file" accept="image/*" style="display:none;" />
+            </label>
+            <button id="btnRemoveAvatar" type="button" style="display:block; background:none; border:none; color:#fb7185; font-size:0.72rem; font-weight:600; cursor:pointer; padding:0;">
+              Отстрани слика
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label for="profileName" style="display:block; font-size:0.75rem; font-weight:600; margin-bottom:0.3rem;">Име / Прекар</label>
+          <input id="profileName" type="text" placeholder="пр. Марко" style="width:100%;" />
+        </div>
+
+        <div>
+          <label for="profileBio" style="display:block; font-size:0.75rem; font-weight:600; margin-bottom:0.3rem;">Лична цел или белешка</label>
+          <input id="profileBio" type="text" placeholder="пр. Градење мускулна маса • 175г протеин" style="width:100%;" />
+        </div>
+
+        <div style="display:flex; gap:0.6rem;">
+          <button type="button" data-close-modal="profileModal" class="btn-secondary" style="flex:1; padding:0.75rem; font-size:0.85rem;">Откажи</button>
+          <button type="submit" class="btn-primary" style="flex:1; padding:0.75rem; font-size:0.85rem;">Зачувај профил</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Monthly statistics, chart, and body weight -->
+  <div id="monthlyStatsModal" class="modal-backdrop">
+    <div class="modal-sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <div>
+          <h3 style="margin:0; font-size:1.1rem; font-weight:800;">Месечна статистика</h3>
+          <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">Графикон на внес, просеци и телесна тежина</p>
+        </div>
+        <button type="button" data-close-modal="monthlyStatsModal" class="icon-btn">✕</button>
+      </div>
+
+      <div class="subcard" style="padding:0.4rem; margin-bottom:0.75rem; display:flex; align-items:center; justify-content:space-between;">
+        <button id="btnPrevMonth" type="button" aria-label="Претходен месец" class="icon-btn" style="border:none; background:transparent;">‹</button>
+        <span id="statsMonthTitle" style="font-size:0.88rem; font-weight:800;">Ноември 2026</span>
+        <button id="btnNextMonth" type="button" aria-label="Следен месец" class="icon-btn" style="border:none; background:transparent;">›</button>
+      </div>
+
+      <form id="weightLogForm" class="subcard" style="padding:0.75rem; margin-bottom:0.85rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+        <div>
+          <span style="font-size:0.78rem; font-weight:700; display:block;">Телесна тежина (<span id="weightSelectedDateLabel">денес</span>)</span>
+          <span id="weightLatestSub" style="font-size:0.7rem; color:var(--text-muted);">Нема внесено тежина</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <input id="inputDayWeight" type="text" inputmode="decimal" placeholder="кг" class="decimal-input" style="width:5rem; font-weight:700;" />
+          <button type="submit" class="btn-primary" style="padding:0.55rem 0.75rem; font-size:0.75rem;">Зачувај</button>
+        </div>
+      </form>
+
+      <div class="subcard" style="padding:0.85rem; margin-bottom:0.85rem;">
+        <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.5rem;">
+          <span style="font-weight:700;">Дневни калории во месецот</span>
+          <span style="color:#10b981; font-weight:600;">Цел: <span id="chartGoalLineLabel">2200</span> kcal</span>
+        </div>
+        <div id="monthlyChartContainer" class="no-scrollbar" style="width:100%; overflow-x:auto;"></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:0.85rem;">
+        <div class="subcard" style="padding:0.7rem;">
+          <span style="font-size:0.7rem; color:var(--text-muted); display:block;">Просек калории / ден</span>
+          <strong id="statAvgCalories" style="font-size:1.1rem; color:#10b981;">0 kcal</strong>
+          <span id="statTotalCalories" style="font-size:0.7rem; color:var(--text-muted); display:block;">Вкупно: 0 kcal</span>
+        </div>
+        <div class="subcard" style="padding:0.7rem;">
+          <span style="font-size:0.7rem; color:var(--text-muted); display:block;">Просек протеин / ден</span>
+          <strong id="statAvgProtein" style="font-size:1.1rem; color:#38bdf8;">0 г</strong>
+          <span id="statTotalProtein" style="font-size:0.7rem; color:var(--text-muted); display:block;">Вкупно: 0 г</span>
+        </div>
+        <div class="subcard" style="padding:0.7rem;">
+          <span style="font-size:0.7rem; color:var(--text-muted); display:block;">Активни денови</span>
+          <strong id="statActiveDays" style="font-size:1.1rem;">0</strong>
+          <span style="font-size:0.7rem; color:var(--text-muted); display:block;">денови со внес</span>
+        </div>
+        <div class="subcard" style="padding:0.7rem;">
+          <span style="font-size:0.7rem; color:var(--text-muted); display:block;">ЈХ / Масти просек</span>
+          <strong id="statAvgCarbsFats" style="font-size:0.82rem; color:#fbbf24; display:block; margin-top:0.2rem;">0г ЈХ • 0г М</strong>
+        </div>
+      </div>
+
+      <div style="font-size:0.75rem; font-weight:700; margin-bottom:0.4rem;">Преглед по денови во месецот</div>
+      <div id="monthlyDaysList" style="display:flex; flex-direction:column; gap:0.45rem; max-height:13rem; overflow-y:auto; margin-bottom:0.85rem;"></div>
+
+      <button type="button" data-close-modal="monthlyStatsModal" class="btn-primary" style="width:100%; padding:0.75rem; font-size:0.85rem;">Затвори</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Barcode scanner -->
+  <div id="barcodeModal" class="modal-backdrop">
+    <div class="modal-sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+        <div>
+          <h3 style="margin:0; font-size:1.1rem; font-weight:800;">Скенирај баркод</h3>
+          <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">Скенирај во живо, сликај фотографија или внеси број</p>
+        </div>
+        <button type="button" data-close-modal="barcodeModal" class="icon-btn">✕</button>
+      </div>
+
+      <label class="btn-primary" style="width:100%; padding:0.85rem; font-size:0.85rem; margin-bottom:0.75rem;">
+        Сликај баркод со камера
+        <input id="barcodePhotoInput" type="file" accept="image/*" capture="environment" style="display:none;" />
+      </label>
+
+      <div id="liveCameraWrapper" style="border-radius:1rem; overflow:hidden; background:#090d16; border:1px solid var(--border-soft); margin-bottom:0.75rem; min-height:9rem; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <video id="zxingLiveVideo" style="width:100%; max-height:14rem; object-fit:cover; display:none;" playsinline muted></video>
+        <div id="barcodeReader" style="width:100%; display:none;"></div>
+        <div id="barcodeFileScannerTemp" style="display:none;"></div>
+        <canvas id="barcodeProcessCanvas" style="display:none;"></canvas>
+        <div id="barcodeCameraStatus" style="padding:1rem; text-align:center; font-size:0.78rem; color:#cbd5e1;">
+          Се проверува камерата во живо...
+        </div>
+      </div>
+
+      <div id="barcodeLookupStatus" style="display:none; margin-bottom:0.75rem; padding:0.7rem; border-radius:0.85rem; background:rgba(2,132,199,0.14); color:#38bdf8; font-size:0.78rem; font-weight:600; text-align:center;">
+        Се пребаруваат нутритивните податоци...
+      </div>
+
+      <form id="manualBarcodeForm" style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+        <input id="manualBarcodeInput" type="text" inputmode="numeric" placeholder="Или внеси баркод број (пр. 3017620422003)" style="flex:1;" />
+        <button type="submit" class="btn-primary" style="padding:0.65rem 1rem; font-size:0.78rem;">Барај</button>
+      </form>
+
+      <button type="button" data-close-modal="barcodeModal" class="btn-secondary" style="width:100%; padding:0.75rem; font-size:0.85rem;">Затвори</button>
+    </div>
+  </div>
+
+  <script id="embeddedStateData" type="application/json">null</script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // 13-category international and Balkan food database (per 100g/100ml + average unit weights)
+      const INTERNATIONAL_FOOD_DB = [
+        { id: 'fr-apple', name: 'Јаболко (црвено/зелено)', category: '1. Овошје', subcategory: 'Домашно овошје', unitName: 'јаболко', avgUnitGrams: 180, kcal100: 52, pro100: 0.3, carb100: 13.8, fat100: 0.2, fiber100: 2.4 },
+        { id: 'fr-pear', name: 'Круша', category: '1. Овошје', subcategory: 'Домашно овошје', unitName: 'круша', avgUnitGrams: 170, kcal100: 57, pro100: 0.4, carb100: 15.2, fat100: 0.1, fiber100: 3.1 },
+        { id: 'fr-plum', name: 'Слива', category: '1. Овошје', subcategory: 'Домашно овошје', unitName: 'слива', avgUnitGrams: 65, kcal100: 46, pro100: 0.7, carb100: 11.4, fat100: 0.3, fiber100: 1.4 },
+        { id: 'fr-peach', name: 'Праска', category: '1. Овошје', subcategory: 'Домашно овошје', unitName: 'праска', avgUnitGrams: 150, kcal100: 39, pro100: 0.9, carb100: 9.5, fat100: 0.3, fiber100: 1.5 },
+        { id: 'fr-grapes', name: 'Грозје', category: '1. Овошје', subcategory: 'Домашно овошје', unitName: 'грст (120g)', avgUnitGrams: 120, kcal100: 69, pro100: 0.7, carb100: 18.1, fat100: 0.2, fiber100: 0.9 },
+        { id: 'fr-cherry', name: 'Цреши / Вишни', category: '1. Овошје', subcategory: 'Домашно овошје', unitName: 'грст (100g)', avgUnitGrams: 100, kcal100: 63, pro100: 1.1, carb100: 16.0, fat100: 0.2, fiber100: 2.1 },
+        { id: 'fr-watermelon', name: 'Лубеница', category: '1. Овошје', subcategory: 'Домашно овошје', unitName: 'парче (250g)', avgUnitGrams: 250, kcal100: 30, pro100: 0.6, carb100: 7.6, fat100: 0.2, fiber100: 0.4 },
+        { id: 'fr-banana', name: 'Банана', category: '1. Овошје', subcategory: 'Егзотично и тропско', unitName: 'банана', avgUnitGrams: 120, kcal100: 89, pro100: 1.1, carb100: 22.8, fat100: 0.3, fiber100: 2.6 },
+        { id: 'fr-orange', name: 'Портокал', category: '1. Овошје', subcategory: 'Цитруси', unitName: 'портокал', avgUnitGrams: 140, kcal100: 47, pro100: 0.9, carb100: 11.8, fat100: 0.1, fiber100: 2.4 },
+        { id: 'fr-lemon', name: 'Лимон', category: '1. Овошје', subcategory: 'Цитруси', unitName: 'лимон', avgUnitGrams: 60, kcal100: 29, pro100: 1.1, carb100: 9.3, fat100: 0.3, fiber100: 2.8 },
+        { id: 'fr-kiwi', name: 'Киви', category: '1. Овошје', subcategory: 'Егзотично и тропско', unitName: 'киви', avgUnitGrams: 75, kcal100: 61, pro100: 1.1, carb100: 14.7, fat100: 0.5, fiber100: 3.0 },
+        { id: 'fr-mango', name: 'Манго', category: '1. Овошје', subcategory: 'Егзотично и тропско', unitName: 'порција (150g)', avgUnitGrams: 150, kcal100: 60, pro100: 0.8, carb100: 15.0, fat100: 0.4, fiber100: 1.6 },
+        { id: 'fr-pineapple', name: 'Ананас', category: '1. Овошје', subcategory: 'Егзотично и тропско', unitName: 'парче (100g)', avgUnitGrams: 100, kcal100: 50, pro100: 0.5, carb100: 13.1, fat100: 0.1, fiber100: 1.4 },
+        { id: 'fr-papaya', name: 'Папаја', category: '1. Овошје', subcategory: 'Егзотично и тропско', unitName: 'порција (150g)', avgUnitGrams: 150, kcal100: 43, pro100: 0.5, carb100: 10.8, fat100: 0.3, fiber100: 1.7 },
+        { id: 'fr-strawberries', name: 'Јагоди', category: '1. Овошје', subcategory: 'Бобичасто овошје', unitName: 'порција (120g)', avgUnitGrams: 120, kcal100: 32, pro100: 0.7, carb100: 7.7, fat100: 0.3, fiber100: 2.0 },
+        { id: 'fr-blueberries', name: 'Боровинки', category: '1. Овошје', subcategory: 'Бобичасто овошје', unitName: 'грст (100g)', avgUnitGrams: 100, kcal100: 57, pro100: 0.7, carb100: 14.5, fat100: 0.3, fiber100: 2.4 },
+        { id: 'fr-raspberries', name: 'Малини', category: '1. Овошје', subcategory: 'Бобичасто овошје', unitName: 'грст (100g)', avgUnitGrams: 100, kcal100: 52, pro100: 1.2, carb100: 11.9, fat100: 0.7, fiber100: 6.5 },
+        { id: 'mt-chicken-breast', name: 'Пилешки гради (варени/печени)', category: '2. Месо', subcategory: 'Живина', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 165, pro100: 31.0, carb100: 0.0, fat100: 3.6, fiber100: 0.0 },
+        { id: 'mt-chicken-thigh', name: 'Пилешки копан / надкопан (без коска)', category: '2. Месо', subcategory: 'Живина', unitName: 'парче (130g)', avgUnitGrams: 130, kcal100: 179, pro100: 24.7, carb100: 0.0, fat100: 8.2, fiber100: 0.0 },
+        { id: 'mt-turkey', name: 'Мисиркино месо (гради)', category: '2. Месо', subcategory: 'Живина', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 147, pro100: 29.5, carb100: 0.0, fat100: 2.1, fiber100: 0.0 },
+        { id: 'mt-beef-lean', name: 'Говедско месо (посно)', category: '2. Месо', subcategory: 'Говедско и телешко', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 217, pro100: 26.1, carb100: 0.0, fat100: 11.8, fiber100: 0.0 },
+        { id: 'mt-veal', name: 'Телешко месо', category: '2. Месо', subcategory: 'Говедско и телешко', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 172, pro100: 24.0, carb100: 0.0, fat100: 7.6, fiber100: 0.0 },
+        { id: 'mt-pork-loin', name: 'Свинско месо (кременадла / посно)', category: '2. Месо', subcategory: 'Свинско', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 196, pro100: 27.3, carb100: 0.0, fat100: 8.9, fiber100: 0.0 },
+        { id: 'mt-lamb', name: 'Јагнешко месо', category: '2. Месо', subcategory: 'Јагнешко и јарешко', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 258, pro100: 25.0, carb100: 0.0, fat100: 16.5, fiber100: 0.0 },
+        { id: 'mt-goat', name: 'Јарешко месо', category: '2. Месо', subcategory: 'Јагнешко и јарешко', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 143, pro100: 27.1, carb100: 0.0, fat100: 3.0, fiber100: 0.0 },
+        { id: 'mt-rabbit', name: 'Зајачко месо', category: '2. Месо', subcategory: 'Друго месо', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 173, pro100: 29.0, carb100: 0.0, fat100: 5.5, fiber100: 0.0 },
+        { id: 'sf-salmon', name: 'Лосос (филе)', category: '3. Риба и морски плодови', subcategory: 'Масна риба', unitName: 'филе (150g)', avgUnitGrams: 150, kcal100: 208, pro100: 20.4, carb100: 0.0, fat100: 13.4, fiber100: 0.0 },
+        { id: 'sf-tuna-water', name: 'Туна во сопствен сок / вода', category: '3. Риба и морски плодови', subcategory: 'Конзервирана и бела риба', unitName: 'конзерва (112g)', avgUnitGrams: 112, kcal100: 116, pro100: 25.5, carb100: 0.0, fat100: 0.8, fiber100: 0.0 },
+        { id: 'sf-sardines', name: 'Сардини во масло (исцедени)', category: '3. Риба и морски плодови', subcategory: 'Масна риба', unitName: 'конзерва (100g)', avgUnitGrams: 100, kcal100: 208, pro100: 24.6, carb100: 0.0, fat100: 11.5, fiber100: 0.0 },
+        { id: 'sf-trout', name: 'Пастрмка', category: '3. Риба и морски плодови', subcategory: 'Речна и бела риба', unitName: 'парче (160g)', avgUnitGrams: 160, kcal100: 148, pro100: 20.8, carb100: 0.0, fat100: 6.6, fiber100: 0.0 },
+        { id: 'sf-cod', name: 'Бакалар / Ослич', category: '3. Риба и морски плодови', subcategory: 'Конзервирана и бела риба', unitName: 'филе (150g)', avgUnitGrams: 150, kcal100: 82, pro100: 17.8, carb100: 0.0, fat100: 0.7, fiber100: 0.0 },
+        { id: 'sf-shrimp', name: 'Ракчиња (шримп)', category: '3. Риба и морски плодови', subcategory: 'Морски плодови', unitName: 'порција (120g)', avgUnitGrams: 120, kcal100: 99, pro100: 24.0, carb100: 0.2, fat100: 0.3, fiber100: 0.0 },
+        { id: 'sf-mussels', name: 'Школки', category: '3. Риба и морски плодови', subcategory: 'Морски плодови', unitName: 'порција (150g)', avgUnitGrams: 150, kcal100: 86, pro100: 11.9, carb100: 3.7, fat100: 2.2, fiber100: 0.0 },
+        { id: 'sf-squid', name: 'Лигњи', category: '3. Риба и морски плодови', subcategory: 'Морски плодови', unitName: 'порција (140g)', avgUnitGrams: 140, kcal100: 92, pro100: 15.6, carb100: 3.1, fat100: 1.4, fiber100: 0.0 },
+        { id: 'sf-octopus', name: 'Октопод (варен)', category: '3. Риба и морски плодови', subcategory: 'Морски плодови', unitName: 'порција (130g)', avgUnitGrams: 130, kcal100: 164, pro100: 29.8, carb100: 4.4, fat100: 2.1, fiber100: 0.0 },
+        { id: 'vg-tomato', name: 'Домат свеж', category: '4. Зеленчук', subcategory: 'Свеж зеленчук', unitName: 'домат', avgUnitGrams: 130, kcal100: 18, pro100: 0.9, carb100: 3.9, fat100: 0.2, fiber100: 1.2 },
+        { id: 'vg-cucumber', name: 'Краставица свежа', category: '4. Зеленчук', subcategory: 'Свеж зеленчук', unitName: 'краставица', avgUnitGrams: 160, kcal100: 15, pro100: 0.7, carb100: 3.6, fat100: 0.1, fiber100: 0.5 },
+        { id: 'vg-pepper', name: 'Пиперка (црвена/зелена)', category: '4. Зеленчук', subcategory: 'Свеж и печен зеленчук', unitName: 'пиперка', avgUnitGrams: 120, kcal100: 26, pro100: 1.0, carb100: 6.0, fat100: 0.3, fiber100: 2.1 },
+        { id: 'vg-broccoli', name: 'Брокула (варена)', category: '4. Зеленчук', subcategory: 'Варен и зелен зеленчук', unitName: 'порција (120g)', avgUnitGrams: 120, kcal100: 35, pro100: 2.4, carb100: 7.2, fat100: 0.4, fiber100: 3.3 },
+        { id: 'vg-spinach', name: 'Спанаќ свеж/варен', category: '4. Зеленчук', subcategory: 'Варен и зелен зеленчук', unitName: 'порција (100g)', avgUnitGrams: 100, kcal100: 23, pro100: 2.9, carb100: 3.6, fat100: 0.4, fiber100: 2.2 },
+        { id: 'vg-zucchini', name: 'Тиквица', category: '4. Зеленчук', subcategory: 'Свеж и печен зеленчук', unitName: 'тиквица', avgUnitGrams: 180, kcal100: 17, pro100: 1.2, carb100: 3.1, fat100: 0.3, fiber100: 1.0 },
+        { id: 'vg-eggplant', name: 'Модар патлиџан', category: '4. Зеленчук', subcategory: 'Свеж и печен зеленчук', unitName: 'порција (150g)', avgUnitGrams: 150, kcal100: 25, pro100: 1.0, carb100: 5.9, fat100: 0.2, fiber100: 3.0 },
+        { id: 'vg-carrot', name: 'Морков', category: '4. Зеленчук', subcategory: 'Кореноплоден зеленчук', unitName: 'морков', avgUnitGrams: 75, kcal100: 41, pro100: 0.9, carb100: 9.6, fat100: 0.2, fiber100: 2.8 },
+        { id: 'vg-asparagus', name: 'Аспарагус (аспарагус / шпаргла)', category: '4. Зеленчук', subcategory: 'Меѓународни видови', unitName: 'снопче (100g)', avgUnitGrams: 100, kcal100: 20, pro100: 2.2, carb100: 3.9, fat100: 0.1, fiber100: 2.1 },
+        { id: 'vg-artichoke', name: 'Артичока', category: '4. Зеленчук', subcategory: 'Меѓународни видови', unitName: 'артичока', avgUnitGrams: 120, kcal100: 47, pro100: 3.3, carb100: 10.5, fat100: 0.2, fiber100: 5.4 },
+        { id: 'vg-bok-choy', name: 'Бок чој (азиска зелка)', category: '4. Зеленчук', subcategory: 'Меѓународни видови', unitName: 'порција (120g)', avgUnitGrams: 120, kcal100: 13, pro100: 1.5, carb100: 2.2, fat100: 0.2, fiber100: 1.0 },
+        { id: 'vg-brussels', name: 'Прокељ (бриселска зелка)', category: '4. Зеленчук', subcategory: 'Меѓународни видови', unitName: 'порција (120g)', avgUnitGrams: 120, kcal100: 43, pro100: 3.4, carb100: 9.0, fat100: 0.3, fiber100: 3.8 },
+        { id: 'pr-egg', name: 'Јајце цело (варено/пржено)', category: '5. Протеински намирници', subcategory: 'Јајца', unitName: 'јајце', avgUnitGrams: 55, kcal100: 155, pro100: 12.6, carb100: 1.1, fat100: 10.6, fiber100: 0.0 },
+        { id: 'pr-egg-white', name: 'Белки од јајце', category: '5. Протеински намирници', subcategory: 'Јајца', unitName: 'белка', avgUnitGrams: 33, kcal100: 52, pro100: 10.9, carb100: 0.7, fat100: 0.2, fiber100: 0.0 },
+        { id: 'pr-greek-yogurt', name: 'Грчки јогурт (2% масти)', category: '5. Протеински намирници', subcategory: 'Млечни протеини', unitName: 'чашка (150g)', avgUnitGrams: 150, kcal100: 73, pro100: 9.0, carb100: 3.9, fat100: 2.0, fiber100: 0.0 },
+        { id: 'pr-urda', name: 'Урда / Свежо младо сирење', category: '5. Протеински намирници', subcategory: 'Млечни протеини', unitName: 'лажица (35g)', avgUnitGrams: 35, kcal100: 98, pro100: 11.1, carb100: 3.4, fat100: 4.3, fiber100: 0.0 },
+        { id: 'pr-whey', name: 'Whey протеин прав (дозерка ~30g)', category: '5. Протеински намирници', subcategory: 'Суплементи и барови', unitName: 'дозерка', avgUnitGrams: 30, kcal100: 400, pro100: 80.0, carb100: 7.0, fat100: 5.5, fiber100: 1.5 },
+        { id: 'pr-protein-bar', name: 'Протеински бар', category: '5. Протеински намирници', subcategory: 'Суплементи и барови', unitName: 'бар', avgUnitGrams: 60, kcal100: 350, pro100: 33.0, carb100: 32.0, fat100: 11.0, fiber100: 6.0 },
+        { id: 'pr-tofu', name: 'Тофу (цврсто)', category: '5. Протеински намирници', subcategory: 'Растителни протеини', unitName: 'парче (100g)', avgUnitGrams: 100, kcal100: 144, pro100: 17.3, carb100: 2.8, fat100: 8.7, fiber100: 2.3 },
+        { id: 'pr-tempeh', name: 'Темпе', category: '5. Протеински намирници', subcategory: 'Растителни протеини', unitName: 'парче (100g)', avgUnitGrams: 100, kcal100: 192, pro100: 20.3, carb100: 7.6, fat100: 10.8, fiber100: 4.5 },
+        { id: 'dy-milk', name: 'Млеко кравјо (2.8% / 3.2% масти)', category: '6. Млечни производи', subcategory: 'Млеко и ферментирани', unitName: 'чаша (200ml)', avgUnitGrams: 200, kcal100: 56, pro100: 3.3, carb100: 4.7, fat100: 2.6, fiber100: 0.0 },
+        { id: 'dy-yogurt', name: 'Јогурт течен', category: '6. Млечни производи', subcategory: 'Млеко и ферментирани', unitName: 'чаша (200ml)', avgUnitGrams: 200, kcal100: 46, pro100: 3.2, carb100: 4.4, fat100: 1.8, fiber100: 0.0 },
+        { id: 'dy-kefir', name: 'Кефир', category: '6. Млечни производи', subcategory: 'Млеко и ферментирани', unitName: 'чаша (200ml)', avgUnitGrams: 200, kcal100: 52, pro100: 3.4, carb100: 4.5, fat100: 2.2, fiber100: 0.0 },
+        { id: 'dy-kiselo-mleko', name: 'Кисело млеко', category: '6. Млечни производи', subcategory: 'Млеко и ферментирани', unitName: 'чашка (180g)', avgUnitGrams: 180, kcal100: 61, pro100: 3.5, carb100: 4.7, fat100: 3.2, fiber100: 0.0 },
+        { id: 'dy-sour-cream', name: 'Павлака (20% масти)', category: '6. Млечни производи', subcategory: 'Павлака', unitName: 'лажица (25g)', avgUnitGrams: 25, kcal100: 206, pro100: 2.8, carb100: 3.5, fat100: 20.0, fiber100: 0.0 },
+        { id: 'dy-white-cheese', name: 'Бело сирење (овчо/кравјо)', category: '6. Млечни производи', subcategory: 'Сирења и кашкавали', unitName: 'парче (50g)', avgUnitGrams: 50, kcal100: 264, pro100: 14.2, carb100: 4.1, fat100: 21.3, fiber100: 0.0 },
+        { id: 'dy-kashkaval', name: 'Кашкавал', category: '6. Млечни производи', subcategory: 'Сирења и кашкавали', unitName: 'парче (35g)', avgUnitGrams: 35, kcal100: 380, pro100: 25.0, carb100: 1.5, fat100: 30.5, fiber100: 0.0 },
+        { id: 'dy-mozzarella', name: 'Моцарела', category: '6. Млечни производи', subcategory: 'Сирења и кашкавали', unitName: 'парче (40g)', avgUnitGrams: 40, kcal100: 280, pro100: 22.2, carb100: 2.2, fat100: 20.3, fiber100: 0.0 },
+        { id: 'dy-parmesan', name: 'Пармезан', category: '6. Млечни производи', subcategory: 'Сирења и кашкавали', unitName: 'лажица (15g)', avgUnitGrams: 15, kcal100: 431, pro100: 38.5, carb100: 4.1, fat100: 28.6, fiber100: 0.0 },
+        { id: 'dy-feta', name: 'Фета сирење', category: '6. Млечни производи', subcategory: 'Сирења и кашкавали', unitName: 'парче (50g)', avgUnitGrams: 50, kcal100: 264, pro100: 14.2, carb100: 4.1, fat100: 21.3, fiber100: 0.0 },
+        { id: 'dy-ricotta', name: 'Рикота', category: '6. Млечни производи', subcategory: 'Сирења и кашкавали', unitName: 'лажица (30g)', avgUnitGrams: 30, kcal100: 174, pro100: 11.3, carb100: 3.0, fat100: 13.0, fiber100: 0.0 },
+        { id: 'ft-olive-oil', name: 'Маслиново масло', category: '7. Масти и масла', subcategory: 'Масла', unitName: 'лажица (10g)', avgUnitGrams: 10, kcal100: 884, pro100: 0.0, carb100: 0.0, fat100: 100.0, fiber100: 0.0 },
+        { id: 'ft-sunflower-oil', name: 'Сончогледово масло', category: '7. Масти и масла', subcategory: 'Масла', unitName: 'лажица (10g)', avgUnitGrams: 10, kcal100: 884, pro100: 0.0, carb100: 0.0, fat100: 100.0, fiber100: 0.0 },
+        { id: 'ft-coconut-oil', name: 'Кокосово масло', category: '7. Масти и масла', subcategory: 'Масла', unitName: 'лажица (10g)', avgUnitGrams: 10, kcal100: 892, pro100: 0.0, carb100: 0.0, fat100: 99.1, fiber100: 0.0 },
+        { id: 'ft-butter', name: 'Путер', category: '7. Масти и масла', subcategory: 'Масла', unitName: 'лажица (14g)', avgUnitGrams: 14, kcal100: 717, pro100: 0.9, carb100: 0.1, fat100: 81.1, fiber100: 0.0 },
+        { id: 'ft-avocado', name: 'Авокадо', category: '7. Масти и масла', subcategory: 'Здрави масти (овошје и семки)', unitName: 'половина (80g)', avgUnitGrams: 80, kcal100: 160, pro100: 2.0, carb100: 8.5, fat100: 14.7, fiber100: 6.7 },
+        { id: 'ft-almonds', name: 'Бадеми', category: '7. Масти и масла', subcategory: 'Јаткасти плодови', unitName: 'грст (30g)', avgUnitGrams: 30, kcal100: 579, pro100: 21.2, carb100: 21.6, fat100: 49.9, fiber100: 12.5 },
+        { id: 'ft-walnuts', name: 'Ореви', category: '7. Масти и масла', subcategory: 'Јаткасти плодови', unitName: 'грст (30g)', avgUnitGrams: 30, kcal100: 654, pro100: 15.2, carb100: 13.7, fat100: 65.2, fiber100: 6.7 },
+        { id: 'ft-hazelnuts', name: 'Лешници', category: '7. Масти и масла', subcategory: 'Јаткасти плодови', unitName: 'грст (30g)', avgUnitGrams: 30, kcal100: 628, pro100: 15.0, carb100: 16.7, fat100: 60.8, fiber100: 9.7 },
+        { id: 'ft-cashews', name: 'Индиски ореви', category: '7. Масти и масла', subcategory: 'Јаткасти плодови', unitName: 'грст (30g)', avgUnitGrams: 30, kcal100: 553, pro100: 18.2, carb100: 30.2, fat100: 43.9, fiber100: 3.3 },
+        { id: 'ft-peanuts', name: 'Кикиритки / Путер од кикиритки', category: '7. Масти и масла', subcategory: 'Јаткасти плодови', unitName: 'лажица (20g)', avgUnitGrams: 20, kcal100: 567, pro100: 25.8, carb100: 16.1, fat100: 49.2, fiber100: 8.5 },
+        { id: 'ft-seeds', name: 'Семки (чиа / ленено / сончоглед / тиква)', category: '7. Масти и масла', subcategory: 'Здрави масти (овошје и семки)', unitName: 'лажица (15g)', avgUnitGrams: 15, kcal100: 530, pro100: 19.0, carb100: 24.0, fat100: 41.0, fiber100: 14.0 },
+        { id: 'cb-rice', name: 'Ориз бел / интегрален (варен)', category: '8. Јаглехидрати и житарици', subcategory: 'Ориз и житарици', unitName: 'чинија (150g)', avgUnitGrams: 150, kcal100: 130, pro100: 2.7, carb100: 28.2, fat100: 0.3, fiber100: 0.4 },
+        { id: 'cb-oats', name: 'Овесни снегулки (суви)', category: '8. Јаглехидрати и житарици', subcategory: 'Ориз и житарици', unitName: 'лажица (15g)', avgUnitGrams: 15, kcal100: 389, pro100: 16.9, carb100: 66.3, fat100: 6.9, fiber100: 10.6 },
+        { id: 'cb-quinoa', name: 'Киноа (варена)', category: '8. Јаглехидрати и житарици', subcategory: 'Псевдожитарици', unitName: 'чинија (150g)', avgUnitGrams: 150, kcal100: 120, pro100: 4.4, carb100: 21.3, fat100: 1.9, fiber100: 2.8 },
+        { id: 'cb-bulgur', name: 'Булгур (варен)', category: '8. Јаглехидрати и житарици', subcategory: 'Ориз и житарици', unitName: 'чинија (150g)', avgUnitGrams: 150, kcal100: 83, pro100: 3.1, carb100: 18.6, fat100: 0.2, fiber100: 4.5 },
+        { id: 'cb-couscous', name: 'Кус-кус (варен)', category: '8. Јаглехидрати и житарици', subcategory: 'Ориз и житарици', unitName: 'чинија (150g)', avgUnitGrams: 150, kcal100: 112, pro100: 3.8, carb100: 23.2, fat100: 0.2, fiber100: 1.4 },
+        { id: 'cb-pasta', name: 'Тестенини / Макарони / Шпагети (варени)', category: '8. Јаглехидрати и житарици', subcategory: 'Тестенини и леб', unitName: 'чинија (180g)', avgUnitGrams: 180, kcal100: 131, pro100: 5.0, carb100: 25.1, fat100: 1.1, fiber100: 1.8 },
+        { id: 'cb-bread', name: 'Леб (бел / интегрален)', category: '8. Јаглехидрати и житарици', subcategory: 'Тестенини и леб', unitName: 'парче леб', avgUnitGrams: 35, kcal100: 265, pro100: 9.0, carb100: 49.0, fat100: 3.2, fiber100: 2.7 },
+        { id: 'cb-potato', name: 'Компир (варен/печен)', category: '8. Јаглехидрати и житарици', subcategory: 'Компир и палента', unitName: 'компир', avgUnitGrams: 150, kcal100: 87, pro100: 1.9, carb100: 20.1, fat100: 0.1, fiber100: 1.8 },
+        { id: 'cb-sweet-potato', name: 'Сладок компир (батат)', category: '8. Јаглехидрати и житарици', subcategory: 'Компир и палента', unitName: 'парче (150g)', avgUnitGrams: 150, kcal100: 86, pro100: 1.6, carb100: 20.1, fat100: 0.1, fiber100: 3.0 },
+        { id: 'cb-polenta', name: 'Палента (варена)', category: '8. Јаглехидрати и житарици', subcategory: 'Компир и палента', unitName: 'чинија (180g)', avgUnitGrams: 180, kcal100: 70, pro100: 1.4, carb100: 14.9, fat100: 0.5, fiber100: 0.7 },
+        { id: 'cb-corn', name: 'Пченка (варена)', category: '8. Јаглехидрати и житарици', subcategory: 'Компир и палента', unitName: 'клавче / порција (120g)', avgUnitGrams: 120, kcal100: 96, pro100: 3.4, carb100: 21.0, fat100: 1.5, fiber100: 2.4 },
+        { id: 'lg-beans', name: 'Грав (варен)', category: '9. Мешунки', subcategory: 'Грав и наут', unitName: 'чинија (170g)', avgUnitGrams: 170, kcal100: 127, pro100: 8.7, carb100: 22.8, fat100: 0.5, fiber100: 6.4 },
+        { id: 'lg-lentils', name: 'Леќа (варена)', category: '9. Мешунки', subcategory: 'Леќа и грашок', unitName: 'чинија (170g)', avgUnitGrams: 170, kcal100: 116, pro100: 9.0, carb100: 20.1, fat100: 0.4, fiber100: 7.9 },
+        { id: 'lg-chickpeas', name: 'Наут (варен)', category: '9. Мешунки', subcategory: 'Грав и наут', unitName: 'чинија (160g)', avgUnitGrams: 160, kcal100: 164, pro100: 8.9, carb100: 27.4, fat100: 2.6, fiber100: 7.6 },
+        { id: 'lg-peas', name: 'Грашок (варен)', category: '9. Мешунки', subcategory: 'Леќа и грашок', unitName: 'чинија (140g)', avgUnitGrams: 140, kcal100: 84, pro100: 5.4, carb100: 15.6, fat100: 0.2, fiber100: 5.7 },
+        { id: 'lg-soy', name: 'Соја зрно / Едамаме', category: '9. Мешунки', subcategory: 'Соја', unitName: 'порција (120g)', avgUnitGrams: 120, kcal100: 141, pro100: 11.9, carb100: 8.9, fat100: 6.4, fiber100: 5.2 },
+        { id: 'dr-water', name: 'Вода / Минерална вода', category: '10. Пијалаци', subcategory: 'Вода и чаеви', unitName: 'чаша (250ml)', avgUnitGrams: 250, kcal100: 0, pro100: 0.0, carb100: 0.0, fat100: 0.0, fiber100: 0.0 },
+        { id: 'dr-coffee-black', name: 'Кафе (еспресо / турско без шеќер)', category: '10. Пијалаци', subcategory: 'Кафе и чај', unitName: 'шолја (100ml)', avgUnitGrams: 100, kcal100: 2, pro100: 0.1, carb100: 0.0, fat100: 0.0, fiber100: 0.0 },
+        { id: 'dr-tea', name: 'Чај (зелен / црн / билен без шеќер)', category: '10. Пијалаци', subcategory: 'Вода и чаеви', unitName: 'шолја (200ml)', avgUnitGrams: 200, kcal100: 1, pro100: 0.0, carb100: 0.2, fat100: 0.0, fiber100: 0.0 },
+        { id: 'dr-plant-milk', name: 'Растително млеко (бадемово / овесно)', category: '10. Пијалаци', subcategory: 'Растителни млека', unitName: 'чаша (200ml)', avgUnitGrams: 200, kcal100: 35, pro100: 0.9, carb100: 3.4, fat100: 1.8, fiber100: 0.5 },
+        { id: 'dr-orange-juice', name: 'Природен сок од портокал', category: '10. Пијалаци', subcategory: 'Сокови и смути', unitName: 'чаша (200ml)', avgUnitGrams: 200, kcal100: 45, pro100: 0.7, carb100: 10.4, fat100: 0.2, fiber100: 0.2 },
+        { id: 'dr-protein-shake', name: 'Протеински пијалак (ready-to-drink)', category: '10. Пијалаци', subcategory: 'Сокови и смути', unitName: 'шише (330ml)', avgUnitGrams: 330, kcal100: 62, pro100: 9.1, carb100: 2.5, fat100: 1.5, fiber100: 0.3 },
+        { id: 'sw-dark-choc', name: 'Црно чоколадо (70%+ какао)', category: '11. Слатки и десерти', subcategory: 'Чоколадо', unitName: 'коцка (20g)', avgUnitGrams: 20, kcal100: 598, pro100: 7.8, carb100: 45.9, fat100: 42.6, fiber100: 10.9 },
+        { id: 'sw-milk-choc', name: 'Млечно чоколадо', category: '11. Слатки и десерти', subcategory: 'Чоколадо', unitName: 'коцка (20g)', avgUnitGrams: 20, kcal100: 535, pro100: 7.6, carb100: 59.4, fat100: 29.7, fiber100: 3.4 },
+        { id: 'sw-biscuits', name: 'Бисквити', category: '11. Слатки и десерти', subcategory: 'Бисквити и колачи', unitName: 'бисквит (15g)', avgUnitGrams: 15, kcal100: 460, pro100: 6.5, carb100: 71.0, fat100: 16.5, fiber100: 2.2 },
+        { id: 'sw-ice-cream', name: 'Сладолед (млечен)', category: '11. Слатки и десерти', subcategory: 'Сладолед и пудинг', unitName: 'топка (70g)', avgUnitGrams: 70, kcal100: 207, pro100: 3.5, carb100: 23.6, fat100: 11.0, fiber100: 0.7 },
+        { id: 'sw-pudding', name: 'Пудинг / Протеински пудинг', category: '11. Слатки и десерти', subcategory: 'Сладолед и пудинг', unitName: 'чашка (200g)', avgUnitGrams: 200, kcal100: 95, pro100: 6.5, carb100: 12.0, fat100: 2.2, fiber100: 0.5 },
+        { id: 'sw-cake', name: 'Торта / Колач', category: '11. Слатки и десерти', subcategory: 'Бисквити и колачи', unitName: 'парче (120g)', avgUnitGrams: 120, kcal100: 370, pro100: 5.2, carb100: 48.0, fat100: 17.5, fiber100: 1.5 },
+        { id: 'rd-tavche-gravche', name: 'Тавче гравче', category: '12. Готови оброци и преработена храна', subcategory: 'Балкански специјалитети', unitName: 'порција (250g)', avgUnitGrams: 250, kcal100: 145, pro100: 6.8, carb100: 16.5, fat100: 5.8, fiber100: 4.5 },
+        { id: 'rd-burek', name: 'Бурек со месо / сирење', category: '12. Готови оброци и преработена храна', subcategory: 'Балкански специјалитети', unitName: 'четвртина (180g)', avgUnitGrams: 180, kcal100: 310, pro100: 10.5, carb100: 28.0, fat100: 17.5, fiber100: 1.5 },
+        { id: 'rd-pizza', name: 'Пица (маргерита)', category: '12. Готови оброци и преработена храна', subcategory: 'Светска кујна', unitName: 'парче (140g)', avgUnitGrams: 140, kcal100: 266, pro100: 11.4, carb100: 33.3, fat100: 9.8, fiber100: 2.3 },
+        { id: 'rd-burger', name: 'Хамбургер', category: '12. Готови оброци и преработена храна', subcategory: 'Светска кујна', unitName: 'бургер (220g)', avgUnitGrams: 220, kcal100: 295, pro100: 13.5, carb100: 24.0, fat100: 15.8, fiber100: 1.5 },
+        { id: 'rd-sandwich', name: 'Сендвич', category: '12. Готови оброци и преработена храна', subcategory: 'Светска кујна', unitName: 'сендвич (180g)', avgUnitGrams: 180, kcal100: 235, pro100: 11.0, carb100: 26.5, fat100: 9.2, fiber100: 2.0 },
+        { id: 'rd-soup', name: 'Супа (зеленчукова / пилешка)', category: '12. Готови оброци и преработена храна', subcategory: 'Супи и салати', unitName: 'чинија (250ml)', avgUnitGrams: 250, kcal100: 42, pro100: 2.5, carb100: 5.2, fat100: 1.3, fiber100: 1.1 },
+        { id: 'sp-ajvar', name: 'Ајвар (домашен / традиционален)', category: '13. Зачини, сосови и додатоци', subcategory: 'Балкански додатоци', unitName: 'лажица (30g)', avgUnitGrams: 30, kcal100: 118, pro100: 1.8, carb100: 10.5, fat100: 7.6, fiber100: 3.2 },
+        { id: 'sp-honey', name: 'Мед', category: '13. Зачини, сосови и додатоци', subcategory: 'Засладувачи', unitName: 'лажица (20g)', avgUnitGrams: 20, kcal100: 304, pro100: 0.3, carb100: 82.4, fat100: 0.0, fiber100: 0.2 },
+        { id: 'sp-sugar', name: 'Шеќер (бел / кафеав)', category: '13. Зачини, сосови и додатоци', subcategory: 'Засладувачи', unitName: 'лажичка (5g)', avgUnitGrams: 5, kcal100: 387, pro100: 0.0, carb100: 100.0, fat100: 0.0, fiber100: 0.0 },
+        { id: 'sp-ketchup', name: 'Кечап', category: '13. Зачини, сосови и додатоци', subcategory: 'Сосови', unitName: 'лажица (15g)', avgUnitGrams: 15, kcal100: 112, pro100: 1.2, carb100: 25.8, fat100: 0.1, fiber100: 0.3 },
+        { id: 'sp-mayo', name: 'Мајонез', category: '13. Зачини, сосови и додатоци', subcategory: 'Сосови', unitName: 'лажица (15g)', avgUnitGrams: 15, kcal100: 680, pro100: 1.0, carb100: 0.6, fat100: 75.0, fiber100: 0.0 },
+        { id: 'sp-mustard', name: 'Сенф', category: '13. Зачини, сосови и додатоци', subcategory: 'Сосови', unitName: 'лажичка (6g)', avgUnitGrams: 6, kcal100: 66, pro100: 3.7, carb100: 5.8, fat100: 3.3, fiber100: 4.0 },
+        { id: 'sp-soy-sauce', name: 'Соја сос', category: '13. Зачини, сосови и додатоци', subcategory: 'Сосови', unitName: 'лажица (15ml)', avgUnitGrams: 15, kcal100: 53, pro100: 8.1, carb100: 4.9, fat100: 0.1, fiber100: 0.8 },
+        { id: 'sp-vinegar', name: 'Оцет (вински / јаболков)', category: '13. Зачини, сосови и додатоци', subcategory: 'Зачини и оцет', unitName: 'лажица (15ml)', avgUnitGrams: 15, kcal100: 21, pro100: 0.0, carb100: 0.9, fat100: 0.0, fiber100: 0.0 },
+        { id: 'sp-salt-pepper', name: 'Сол / Бибер / Зачини', category: '13. Зачини, сосови и додатоци', subcategory: 'Зачини и оцет', unitName: 'прстофат (2g)', avgUnitGrams: 2, kcal100: 0, pro100: 0.0, carb100: 0.0, fat100: 0.0, fiber100: 0.0 }
+      ];
+
+      // Generate canvas icon and manifest for Home Screen usage
+      function initAppIconsAndManifest() {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+
+          const grad = ctx.createLinearGradient(0, 0, 512, 512);
+          grad.addColorStop(0, '#10b981');
+          grad.addColorStop(1, '#047857');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 512, 512);
+
+          ctx.beginPath();
+          ctx.arc(256, 256, 175, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.lineWidth = 24;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(256, 256, 175, -Math.PI / 2, Math.PI * 1.15);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 24;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '800 180px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Н', 256, 268);
+
+          const iconUrl = canvas.toDataURL('image/png');
+          const appleLink = document.getElementById('appleTouchIcon');
+          if (appleLink) appleLink.href = iconUrl;
+
+          const manifest = {
+            name: 'Дневен Нутри Тракер',
+            short_name: 'Нутри Тракер',
+            start_url: '.',
+            display: 'standalone',
+            background_color: '#090d16',
+            theme_color: '#090d16',
+            icons: [{ src: iconUrl, sizes: '512x512', type: 'image/png' }]
+          };
+          const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+          const manifestLink = document.getElementById('webManifestLink');
+          if (manifestLink) manifestLink.href = URL.createObjectURL(manifestBlob);
+        } catch (e) {}
+      }
+
+      const STORAGE_KEYS = {
+        GOALS: 'mk_nutri_goals_v1',
+        LOGS: 'mk_nutri_logs_v1',
+        PRESETS: 'mk_nutri_presets_v1',
+        THEME: 'mk_nutri_theme_v1',
+        PROFILE: 'mk_nutri_profile_v1',
+        WATER: 'mk_nutri_water_v1',
+        WEIGHTS: 'mk_nutri_weights_v1',
+        BARCODE_CACHE: 'mk_nutri_barcode_cache_v1'
+      };
+
+      const IDB_NAME = 'NutriTrackerMK_DB';
+      const IDB_STORE = 'appState';
+
+      const DEFAULT_PROFILE = {
+        name: 'Мој акаунт',
+        bio: 'Личен дневник за калории и протеини',
+        avatar: ''
+      };
+
+      const DEFAULT_GOALS = {
+        calories: 2200,
+        protein: 175,
+        carbs: 220,
+        fats: 65,
+        water: 2500
+      };
+
+      const DEFAULT_PRESETS = [
+        { id: 'preset-whey', name: 'Whey протеин шејк', category: 'Ужина/Суплементи', calories: 120, protein: 24, carbs: 3, fats: 1.5, fiber: 0.5 },
+        { id: 'preset-creatine', name: 'Креатин 6г', category: 'Ужина/Суплементи', calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 },
+        { id: 'preset-chicken', name: 'Пилешки гради 200г', category: 'Ручек', calories: 330, protein: 62, carbs: 0, fats: 7, fiber: 0 },
+        { id: 'preset-eggs', name: 'Јајца 3 парчиња', category: 'Појадок', calories: 256, protein: 20.8, carbs: 1.8, fats: 17.5, fiber: 0 }
+      ];
+
+      const CATEGORIES = ['Појадок', 'Ручек', 'Вечера', 'Ужина/Суплементи'];
+
+      const LOCAL_BARCODE_DB = {
+        '3017620422003': { name: 'Nutella лешников крем', calories100: 539, protein100: 6.3, carbs100: 57.5, fats100: 30.9 },
+        '5449000000996': { name: 'Coca-Cola Classic', calories100: 42, protein100: 0, carbs100: 10.6, fats100: 0 },
+        '5000112548167': { name: 'Coca-Cola Zero Sugar', calories100: 0.2, protein100: 0, carbs100: 0, fats100: 0 },
+        '7622210449283': { name: 'Milka млечно чоколадо', calories100: 530, protein100: 6.4, carbs100: 59.5, fats100: 29.5 }
+      };
+
+      // Safely read embedded JSON if present
+      function getEmbeddedState() {
+        try {
+          const el = document.getElementById('embeddedStateData');
+          if (!el || !el.textContent) return null;
+          const parsed = JSON.parse(el.textContent.trim());
+          return parsed && typeof parsed === 'object' ? parsed : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      const embedded = getEmbeddedState();
+
+      let state = {
+        selectedDate: getTodayISO(),
+        statsMonth: getTodayISO().slice(0, 7),
+        presetFilter: '',
+        foodDbCategory: 'ALL',
+        foodDbSubcategory: 'ALL',
+        foodDbSearch: '',
+        foodDbMode: 'grams',
+        selectedFoodItem: null,
+        profile: loadFromStorage(STORAGE_KEYS.PROFILE, embedded?.profile || DEFAULT_PROFILE),
+        goals: { ...DEFAULT_GOALS, ...loadFromStorage(STORAGE_KEYS.GOALS, embedded?.goals || DEFAULT_GOALS) },
+        logs: loadFromStorage(STORAGE_KEYS.LOGS, embedded?.logs || {}),
+        presets: loadFromStorage(STORAGE_KEYS.PRESETS, embedded?.presets || DEFAULT_PRESETS),
+        water: loadFromStorage(STORAGE_KEYS.WATER, embedded?.water || {}),
+        weights: loadFromStorage(STORAGE_KEYS.WEIGHTS, embedded?.weights || {}),
+        barcodeCache: loadFromStorage(STORAGE_KEYS.BARCODE_CACHE, embedded?.barcodeCache || {})
+      };
+
+      // IndexedDB helpers with safe fallback
+      function openIDB() {
+        return new Promise((resolve, reject) => {
+          if (!window.indexedDB) return reject('No IDB');
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE);
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function saveToIDB(fullData) {
+        try {
+          const db = await openIDB();
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put(fullData, 'singleton');
+        } catch (e) {}
+      }
+
+      async function loadFromIDB() {
+        try {
+          const db = await openIDB();
+          return new Promise((resolve) => {
+            const tx = db.transaction(IDB_STORE, 'readonly');
+            const req = tx.objectStore(IDB_STORE).get('singleton');
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+          });
+        } catch (e) {
+          return null;
+        }
+      }
+
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
+
+      function persistAllState() {
+        saveToStorage(STORAGE_KEYS.PROFILE, state.profile);
+        saveToStorage(STORAGE_KEYS.GOALS, state.goals);
+        saveToStorage(STORAGE_KEYS.LOGS, state.logs);
+        saveToStorage(STORAGE_KEYS.PRESETS, state.presets);
+        saveToStorage(STORAGE_KEYS.WATER, state.water);
+        saveToStorage(STORAGE_KEYS.WEIGHTS, state.weights);
+        saveToStorage(STORAGE_KEYS.BARCODE_CACHE, state.barcodeCache);
+        saveToIDB({
+          profile: state.profile,
+          goals: state.goals,
+          logs: state.logs,
+          presets: state.presets,
+          water: state.water,
+          weights: state.weights,
+          barcodeCache: state.barcodeCache,
+          updatedAt: Date.now()
+        });
+      }
+
+      function getTodayISO() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function getPreviousDateISO(isoStr) {
+        const [y, m, d] = isoStr.split('-').map(Number);
+        const dt = new Date(y, m - 1, d - 1);
+        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+      }
+
+      function loadFromStorage(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return JSON.parse(JSON.stringify(fallback));
+          return JSON.parse(raw);
+        } catch (err) {
+          return JSON.parse(JSON.stringify(fallback));
+        }
+      }
+
+      function saveToStorage(key, value) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (err) {}
+      }
+
+      function fmtNum(val) {
+        const num = Number(val) || 0;
+        return Number.isInteger(num) ? num.toString() : num.toFixed(1);
+      }
+
+      function parseDecimalInput(rawVal) {
+        if (rawVal === null || rawVal === undefined) return 0;
+        const normalized = String(rawVal).trim().replace(/,/g, '.');
+        const num = parseFloat(normalized);
+        return Number.isFinite(num) && num >= 0 ? num : 0;
+      }
+
+      // Normalize comma/dot decimal inputs while preserving typing
+      function attachDecimalSanitizers() {
+        document.querySelectorAll('.decimal-input').forEach((input) => {
+          input.addEventListener('input', () => {
+            let val = input.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+            const firstDot = val.indexOf('.');
+            if (firstDot !== -1) {
+              val = val.slice(0, firstDot + 1) + val.slice(firstDot + 1).replace(/\./g, '');
+            }
+            if (input.value !== val) {
+              input.value = val;
+            }
+          });
+        });
+      }
+
+      function formatMacedonianDate(isoStr) {
+        const [y, m, d] = isoStr.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        const todayStr = getTodayISO();
+
+        const yesterdayObj = new Date();
+        yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+        const yesterdayStr = `${yesterdayObj.getFullYear()}-${String(yesterdayObj.getMonth() + 1).padStart(2, '0')}-${String(yesterdayObj.getDate()).padStart(2, '0')}`;
+
+        const tomorrowObj = new Date();
+        tomorrowObj.setDate(tomorrowObj.getDate() + 1);
+        const tomorrowStr = `${tomorrowObj.getFullYear()}-${String(tomorrowObj.getMonth() + 1).padStart(2, '0')}-${String(tomorrowObj.getDate()).padStart(2, '0')}`;
+
+        const months = [
+          'јануари', 'февруари', 'март', 'април', 'мај', 'јуни',
+          'јули', 'август', 'септември', 'октомври', 'ноември', 'декември'
+        ];
+        const days = ['Недела', 'Понеделник', 'Вторник', 'Среда', 'Четврток', 'Петок', 'Сабота'];
+
+        const fullText = `${days[dateObj.getDay()]}, ${d} ${months[m - 1]} ${y}`;
+
+        if (isoStr === todayStr) return { title: 'Денес', sub: fullText, isToday: true };
+        if (isoStr === yesterdayStr) return { title: 'Вчера', sub: fullText, isToday: false };
+        if (isoStr === tomorrowStr) return { title: 'Утре', sub: fullText, isToday: false };
+        return { title: `${d} ${months[m - 1]}`, sub: `${days[dateObj.getDay()]}, ${y}`, isToday: false };
+      }
+
+      function shiftDate(daysDelta) {
+        const [y, m, d] = state.selectedDate.split('-').map(Number);
+        const dt = new Date(y, m - 1, d + daysDelta);
+        const year = dt.getFullYear();
+        const month = String(dt.getMonth() + 1).padStart(2, '0');
+        const day = String(dt.getDate()).padStart(2, '0');
+        state.selectedDate = `${year}-${month}-${day}`;
+        renderAll();
+      }
+
+      let toastTimer = null;
+      let pendingUndoCallback = null;
+
+      function showToast(message, undoFn = null) {
+        const toastEl = document.getElementById('toast');
+        const msgEl = document.getElementById('toastMessage');
+        const undoBtn = document.getElementById('toastUndoBtn');
+        msgEl.textContent = message;
+
+        pendingUndoCallback = typeof undoFn === 'function' ? undoFn : null;
+
+        if (pendingUndoCallback) {
+          undoBtn.style.display = 'inline-block';
+          toastEl.style.pointerEvents = 'auto';
+        } else {
+          undoBtn.style.display = 'none';
+          toastEl.style.pointerEvents = 'none';
+        }
+
+        toastEl.style.opacity = '1';
+        toastEl.style.transform = 'translate(-50%, 0)';
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.style.opacity = '0';
+          toastEl.style.transform = 'translate(-50%, -0.75rem)';
+          toastEl.style.pointerEvents = 'none';
+          pendingUndoCallback = null;
+        }, pendingUndoCallback ? 4200 : 2300);
+      }
+
+      function openModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.add('open');
+        modal.style.display = 'flex';
+      }
+
+      function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        if (id === 'barcodeModal') {
+          stopBarcodeScanner();
+        }
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+      }
+
+      function populateFoodDbCategories() {
+        const selectEl = document.getElementById('foodDbCategorySelect');
+        const uniqueCats = [...new Set(INTERNATIONAL_FOOD_DB.map((item) => item.category))];
+        selectEl.innerHTML = `<option value="ALL">Сите категории (${INTERNATIONAL_FOOD_DB.length})</option>`;
+        uniqueCats.forEach((cat) => {
+          const opt = document.createElement('option');
+          opt.value = cat;
+          opt.textContent = cat;
+          selectEl.appendChild(opt);
+        });
+        selectEl.value = state.foodDbCategory;
+      }
+
+      function renderFoodDbSubcategories() {
+        const bar = document.getElementById('foodDbSubcategoriesBar');
+        bar.innerHTML = '';
+
+        const pool = state.foodDbCategory === 'ALL'
+          ? INTERNATIONAL_FOOD_DB
+          : INTERNATIONAL_FOOD_DB.filter((item) => item.category === state.foodDbCategory);
+
+        const subcats = ['ALL', ...new Set(pool.map((item) => item.subcategory))];
+        if (!subcats.includes(state.foodDbSubcategory)) {
+          state.foodDbSubcategory = 'ALL';
+        }
+
+        subcats.forEach((sub) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const isActive = state.foodDbSubcategory === sub;
+          btn.style.cssText = `padding:0.38rem 0.7rem; border-radius:0.75rem; font-size:0.7rem; font-weight:700; white-space:nowrap; border:1px solid var(--border-soft); cursor:pointer; background:${isActive ? '#059669' : 'var(--bg-subcard)'}; color:${isActive ? '#fff' : 'var(--text-main)'};`;
+          btn.textContent = sub === 'ALL' ? 'Сите подкатегории' : sub;
+          btn.addEventListener('click', () => {
+            state.foodDbSubcategory = sub;
+            renderFoodDbSubcategories();
+            renderFoodDbItems();
+          });
+          bar.appendChild(btn);
+        });
+      }
+
+      function renderFoodDbItems() {
+        const listEl = document.getElementById('foodDbListContainer');
+        const q = state.foodDbSearch.trim().toLowerCase();
+
+        const filtered = INTERNATIONAL_FOOD_DB.filter((item) => {
+          const matchCat = state.foodDbCategory === 'ALL' || item.category === state.foodDbCategory;
+          const matchSub = state.foodDbSubcategory === 'ALL' || item.subcategory === state.foodDbSubcategory;
+          const matchSearch = !q ||
+            item.name.toLowerCase().includes(q) ||
+            item.subcategory.toLowerCase().includes(q) ||
+            item.category.toLowerCase().includes(q);
+          return matchCat && matchSub && matchSearch;
+        });
+
+        listEl.innerHTML = '';
+
+        if (filtered.length === 0) {
+          listEl.innerHTML = `<div style="padding:1rem; text-align:center; font-size:0.75rem; color:var(--text-muted);">Нема пронајдени намирници за дадениот избор.</div>`;
+          return;
+        }
+
+        filtered.forEach((item) => {
+          const isSelected = state.selectedFoodItem && state.selectedFoodItem.id === item.id;
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'subcard';
+          row.style.cssText = `width:100%; text-align:left; padding:0.7rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; cursor:pointer; border-color:${isSelected ? '#10b981' : 'var(--border-soft)'}; background:${isSelected ? 'rgba(16,185,129,0.14)' : 'var(--bg-subcard)'};`;
+          row.innerHTML = `
+            <div style="min-width:0;">
+              <div style="font-size:0.8rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.name)}</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${escapeHtml(item.subcategory)} • 1 ${escapeHtml(item.unitName)} ≈ ${fmtNum(item.avgUnitGrams)}g
+              </div>
+            </div>
+            <div style="text-align:right; flex-shrink:0; font-size:0.7rem;">
+              <div style="font-weight:800; color:#10b981;">${fmtNum(item.kcal100)} kcal/100g</div>
+              <div style="color:var(--text-muted);">П ${fmtNum(item.pro100)}g • Вл ${fmtNum(item.fiber100)}g</div>
+            </div>
+          `;
+          row.addEventListener('click', () => selectFoodForConfigurator(item));
+          listEl.appendChild(row);
+        });
+      }
+
+      function selectFoodForConfigurator(item) {
+        state.selectedFoodItem = item;
+        document.getElementById('foodDbConfigurator').style.display = 'block';
+        document.getElementById('selectedFoodName').textContent = item.name;
+        document.getElementById('selectedFoodMeta').textContent = `${item.category} • ${item.subcategory}`;
+        document.getElementById('foodDbUnitLabel').textContent = item.category.startsWith('10.') ? 'ml' : 'g';
+        document.getElementById('foodDbUnitName').textContent = item.unitName;
+        document.getElementById('foodDbGramsInput').value = String(item.avgUnitGrams || 100);
+        document.getElementById('foodDbPiecesInput').value = '1';
+        document.getElementById('foodDbAvgWeightInput').value = String(item.avgUnitGrams || 100);
+        setFoodDbMode('grams');
+        updateFoodDbCalculation();
+        renderFoodDbItems();
+      }
+
+      function setFoodDbMode(mode) {
+        state.foodDbMode = mode === 'unit' ? 'unit' : 'grams';
+        const btnGrams = document.getElementById('btnModeGrams');
+        const btnUnit = document.getElementById('btnModeUnit');
+        const panelGrams = document.getElementById('panelModeGrams');
+        const panelUnit = document.getElementById('panelModeUnit');
+
+        if (state.foodDbMode === 'unit') {
+          btnUnit.className = 'btn-primary';
+          btnGrams.className = 'btn-secondary';
+          panelGrams.style.display = 'none';
+          panelUnit.style.display = 'block';
+        } else {
+          btnGrams.className = 'btn-primary';
+          btnUnit.className = 'btn-secondary';
+          panelUnit.style.display = 'none';
+          panelGrams.style.display = 'flex';
+        }
+        updateFoodDbCalculation();
+      }
+
+      // Calculate macros and fiber by grams or pieces * unit weight
+      function getConfiguredFoodValues() {
+        const item = state.selectedFoodItem;
+        if (!item) return null;
+
+        let totalGrams = 0;
+        let labelSuffix = '';
+
+        if (state.foodDbMode === 'unit') {
+          const pieces = parseDecimalInput(document.getElementById('foodDbPiecesInput').value);
+          const avgWeight = parseDecimalInput(document.getElementById('foodDbAvgWeightInput').value);
+          totalGrams = pieces * avgWeight;
+          document.getElementById('foodDbCalculatedTotalGrams').textContent = `${fmtNum(totalGrams)} g`;
+          labelSuffix = `${fmtNum(pieces)} × ${item.unitName} (${fmtNum(totalGrams)}g)`;
+        } else {
+          totalGrams = parseDecimalInput(document.getElementById('foodDbGramsInput').value);
+          const unitSym = item.category.startsWith('10.') ? 'ml' : 'g';
+          labelSuffix = `${fmtNum(totalGrams)} ${unitSym}`;
+        }
+
+        const factor = totalGrams / 100;
+        return {
+          totalGrams,
+          labelSuffix,
+          calories: (Number(item.kcal100) || 0) * factor,
+          protein: (Number(item.pro100) || 0) * factor,
+          carbs: (Number(item.carb100) || 0) * factor,
+          fats: (Number(item.fat100) || 0) * factor,
+          fiber: (Number(item.fiber100) || 0) * factor
+        };
+      }
+
+      function updateFoodDbCalculation() {
+        const calc = getConfiguredFoodValues();
+        if (!calc) return;
+        document.getElementById('calcFoodKcal').textContent = fmtNum(calc.calories);
+        document.getElementById('calcFoodPro').textContent = `${fmtNum(calc.protein)}g`;
+        document.getElementById('calcFoodCarb').textContent = `${fmtNum(calc.carbs)}g`;
+        document.getElementById('calcFoodFat').textContent = `${fmtNum(calc.fats)}g`;
+        document.getElementById('calcFoodFiber').textContent = `${fmtNum(calc.fiber)}g`;
+      }
+
+      function addConfiguredFoodToLog() {
+        const item = state.selectedFoodItem;
+        const calc = getConfiguredFoodValues();
+        if (!item || !calc || calc.totalGrams <= 0) {
+          showToast('Внеси валидна количина или број на парчиња');
+          return;
+        }
+
+        const mealCat = document.getElementById('foodDbMealCategory').value || 'Ручек';
+        if (!state.logs[state.selectedDate]) {
+          state.logs[state.selectedDate] = [];
+        }
+
+        const fullName = `${item.name} (${calc.labelSuffix})`;
+        state.logs[state.selectedDate].push({
+          id: 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          name: fullName,
+          category: mealCat,
+          calories: Math.round(calc.calories * 10) / 10,
+          protein: Math.round(calc.protein * 10) / 10,
+          carbs: Math.round(calc.carbs * 10) / 10,
+          fats: Math.round(calc.fats * 10) / 10,
+          fiber: Math.round(calc.fiber * 10) / 10
+        });
+
+        persistAllState();
+        renderSummary();
+        renderEntries();
+        closeModal('foodDbModal');
+        showToast(`Додадено: ${fullName}`);
+      }
+
+      let html5QrScanner = null;
+      let isScannerRunning = false;
+      let zxingCodeReader = null;
+      let zxingStreamControls = null;
+      let scannedBasePer100g = null;
+
+      async function stopBarcodeScanner() {
+        if (zxingStreamControls && typeof zxingStreamControls.stop === 'function') {
+          try {
+            zxingStreamControls.stop();
+          } catch (e) {}
+          zxingStreamControls = null;
+        }
+        if (zxingCodeReader && typeof zxingCodeReader.reset === 'function') {
+          try {
+            zxingCodeReader.reset();
+          } catch (e) {}
+        }
+        const videoEl = document.getElementById('zxingLiveVideo');
+        if (videoEl && videoEl.srcObject) {
+          try {
+            videoEl.srcObject.getTracks().forEach((t) => t.stop());
+          } catch (e) {}
+          videoEl.srcObject = null;
+          videoEl.style.display = 'none';
+        }
+
+        if (html5QrScanner && isScannerRunning) {
+          try {
+            await html5QrScanner.stop();
+          } catch (e) {}
+          isScannerRunning = false;
+        }
+      }
+
+      async function startBarcodeScanner() {
+        const statusEl = document.getElementById('barcodeCameraStatus');
+        const lookupEl = document.getElementById('barcodeLookupStatus');
+        const videoEl = document.getElementById('zxingLiveVideo');
+        lookupEl.style.display = 'none';
+        statusEl.style.display = 'block';
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          statusEl.innerHTML = 'Камерата во живо не е достапна во овој контекст.<br><span style="color:#34d399; font-weight:700;">Користи „Сликај баркод со камера“ или внеси го бројот рачно.</span>';
+          return;
+        }
+
+        statusEl.textContent = 'Се вклучува камерата во живо...';
+
+        try {
+          await stopBarcodeScanner();
+
+          if (window.ZXing && window.ZXing.BrowserMultiFormatReader) {
+            zxingCodeReader = new window.ZXing.BrowserMultiFormatReader();
+            videoEl.style.display = 'block';
+
+            const constraints = {
+              video: {
+                facingMode: { ideal: 'environment' }
+              },
+              audio: false
+            };
+
+            zxingStreamControls = await zxingCodeReader.decodeFromConstraints(
+              constraints,
+              videoEl,
+              async (result) => {
+                if (result && result.text) {
+                  const cleanCode = String(result.text).trim();
+                  if (!cleanCode) return;
+                  await stopBarcodeScanner();
+                  handleBarcodeDetected(cleanCode);
+                }
+              }
+            );
+            statusEl.style.display = 'none';
+            return;
+          }
+
+          if (typeof Html5Qrcode !== 'undefined') {
+            document.getElementById('barcodeReader').style.display = 'block';
+            html5QrScanner = new Html5Qrcode('barcodeReader');
+            await html5QrScanner.start(
+              { facingMode: 'environment' },
+              { fps: 10, qrbox: { width: 250, height: 130 }, aspectRatio: 1.5 },
+              async (decodedText) => {
+                const cleanCode = String(decodedText || '').trim();
+                if (!cleanCode) return;
+                await stopBarcodeScanner();
+                handleBarcodeDetected(cleanCode);
+              },
+              () => {}
+            );
+            isScannerRunning = true;
+            statusEl.style.display = 'none';
+          }
+        } catch (err) {
+          videoEl.style.display = 'none';
+          statusEl.style.display = 'block';
+          statusEl.innerHTML = 'Камерата во живо е блокирана или недозволена во овој преглед.<br><span style="color:#34d399; font-weight:700;">Допри „Сликај баркод со камера“ или отвори го https:// линкот во Safari.</span>';
+        }
+      }
+
+      async function scanBarcodeFromPhoto(file) {
+        if (!file) return;
+        const lookupEl = document.getElementById('barcodeLookupStatus');
+        lookupEl.style.display = 'block';
+        lookupEl.textContent = 'Се анализира сликата и се бара баркодот...';
+
+        try {
+          await stopBarcodeScanner();
+
+          async function tryNativeBarcodeDetector(source) {
+            if (!('BarcodeDetector' in window)) return null;
+            const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'codabar'];
+            try {
+              const detector = new BarcodeDetector({ formats });
+              const results = await detector.detect(source);
+              if (results && results.length > 0 && results[0].rawValue) {
+                return String(results[0].rawValue).trim();
+              }
+            } catch (e) {
+              try {
+                const fallbackDetector = new BarcodeDetector();
+                const results = await fallbackDetector.detect(source);
+                if (results && results.length > 0 && results[0].rawValue) {
+                  return String(results[0].rawValue).trim();
+                }
+              } catch (e2) {}
+            }
+            return null;
+          }
+
+          async function tryZxingFromCanvas(canvasEl) {
+            if (!window.ZXing || !window.ZXing.BrowserMultiFormatReader) return null;
+            try {
+              const reader = new window.ZXing.BrowserMultiFormatReader();
+              const dataUrl = canvasEl.toDataURL('image/jpeg', 0.92);
+              const result = await reader.decodeFromImageUrl(dataUrl);
+              if (result && result.text && String(result.text).trim()) {
+                return String(result.text).trim();
+              }
+            } catch (e) {}
+            return null;
+          }
+
+          async function tryHtml5QrFromCanvas(canvasEl) {
+            if (typeof Html5Qrcode === 'undefined') return null;
+            try {
+              const dataUrl = canvasEl.toDataURL('image/png');
+              const blob = await (await fetch(dataUrl)).blob();
+              const tempFile = new File([blob], 'scan.png', { type: 'image/png' });
+              const fileScanner = new Html5Qrcode('barcodeFileScannerTemp');
+              const decoded = await fileScanner.scanFile(tempFile, false);
+              fileScanner.clear();
+              if (decoded && String(decoded).trim()) {
+                return String(decoded).trim();
+              }
+            } catch (e) {}
+            return null;
+          }
+
+          async function detectFromCanvas(canvasEl) {
+            const nativeCode = await tryNativeBarcodeDetector(canvasEl);
+            if (nativeCode) return nativeCode;
+
+            const zxingCode = await tryZxingFromCanvas(canvasEl);
+            if (zxingCode) return zxingCode;
+
+            const qrCode = await tryHtml5QrFromCanvas(canvasEl);
+            if (qrCode) return qrCode;
+
+            return null;
+          }
+
+          const loadedImg = await new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+              URL.revokeObjectURL(url);
+              resolve(img);
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              reject(new Error('Image load failed'));
+            };
+            img.src = url;
+          });
+
+          const directCode = await tryNativeBarcodeDetector(loadedImg);
+          if (directCode) {
+            handleBarcodeDetected(directCode);
+            return;
+          }
+
+          const baseCanvas = document.getElementById('barcodeProcessCanvas');
+          const ctx = baseCanvas.getContext('2d', { willReadFrequently: true });
+
+          const origW = loadedImg.naturalWidth || loadedImg.width || 1;
+          const origH = loadedImg.naturalHeight || loadedImg.height || 1;
+
+          const maxSide = 1280;
+          let scaledW = origW;
+          let scaledH = origH;
+          if (scaledW > maxSide || scaledH > maxSide) {
+            const scale = Math.min(maxSide / scaledW, maxSide / scaledH);
+            scaledW = Math.max(1, Math.round(scaledW * scale));
+            scaledH = Math.max(1, Math.round(scaledH * scale));
+          }
+
+          const candidates = [
+            { sx: 0, sy: 0, sw: origW, sh: origH, dw: scaledW, dh: scaledH, contrast: false, angle: 0 },
+            { sx: 0, sy: 0, sw: origW, sh: origH, dw: scaledW, dh: scaledH, contrast: true, angle: 0 },
+            { sx: 0, sy: Math.round(origH * 0.25), sw: origW, sh: Math.round(origH * 0.5), dw: scaledW, dh: Math.max(1, Math.round(scaledH * 0.6)), contrast: true, angle: 0 },
+            { sx: 0, sy: Math.round(origH * 0.45), sw: origW, sh: Math.round(origH * 0.5), dw: scaledW, dh: Math.max(1, Math.round(scaledH * 0.6)), contrast: true, angle: 0 },
+            { sx: Math.round(origW * 0.2), sy: Math.round(origH * 0.2), sw: Math.round(origW * 0.6), sh: Math.round(origH * 0.6), dw: scaledW, dh: scaledH, contrast: true, angle: 0 },
+            { sx: 0, sy: 0, sw: origW, sh: origH, dw: scaledW, dh: scaledH, contrast: true, angle: 90 },
+            { sx: 0, sy: 0, sw: origW, sh: origH, dw: scaledW, dh: scaledH, contrast: true, angle: 270 },
+            { sx: Math.round(origW * 0.15), sy: Math.round(origH * 0.15), sw: Math.round(origW * 0.7), sh: Math.round(origH * 0.7), dw: scaledW, dh: scaledH, contrast: true, angle: 90 },
+            { sx: Math.round(origW * 0.15), sy: Math.round(origH * 0.15), sw: Math.round(origW * 0.7), sh: Math.round(origH * 0.7), dw: scaledW, dh: scaledH, contrast: true, angle: 270 }
+          ];
+
+          for (let i = 0; i < candidates.length; i++) {
+            const c = candidates[i];
+            const isRotatedQuarter = c.angle === 90 || c.angle === 270;
+
+            baseCanvas.width = Math.max(1, isRotatedQuarter ? c.dh : c.dw);
+            baseCanvas.height = Math.max(1, isRotatedQuarter ? c.dw : c.dh);
+
+            ctx.save();
+            ctx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+
+            if (c.angle === 90) {
+              ctx.translate(baseCanvas.width / 2, baseCanvas.height / 2);
+              ctx.rotate(Math.PI / 2);
+              ctx.drawImage(loadedImg, c.sx, c.sy, c.sw, c.sh, -c.dw / 2, -c.dh / 2, c.dw, c.dh);
+            } else if (c.angle === 270) {
+              ctx.translate(baseCanvas.width / 2, baseCanvas.height / 2);
+              ctx.rotate(-Math.PI / 2);
+              ctx.drawImage(loadedImg, c.sx, c.sy, c.sw, c.sh, -c.dw / 2, -c.dh / 2, c.dw, c.dh);
+            } else {
+              ctx.drawImage(loadedImg, c.sx, c.sy, c.sw, c.sh, 0, 0, baseCanvas.width, baseCanvas.height);
+            }
+            ctx.restore();
+
+            if (c.contrast) {
+              const imgData = ctx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
+              const px = imgData.data;
+              for (let p = 0; p < px.length; p += 4) {
+                const gray = 0.299 * px[p] + 0.587 * px[p + 1] + 0.114 * px[p + 2];
+                const boosted = gray > 128
+                  ? Math.min(255, (gray - 128) * 1.85 + 128)
+                  : Math.max(0, (gray - 128) * 1.85 + 128);
+                px[p] = boosted;
+                px[p + 1] = boosted;
+                px[p + 2] = boosted;
+              }
+              ctx.putImageData(imgData, 0, 0);
+            }
+
+            const found = await detectFromCanvas(baseCanvas);
+            if (found) {
+              handleBarcodeDetected(found);
+              return;
+            }
+          }
+
+          lookupEl.innerHTML = 'Не успеа да се прочита баркодот од сликата.<br><span style="font-weight:400; color:var(--text-muted);">Пробај без блиц на рамно светло и поблиску, или внеси ги цифрите под баркодот рачно подолу.</span>';
+        } catch (err) {
+          lookupEl.innerHTML = 'Грешка при читање на сликата.<br><span style="font-weight:400; color:var(--text-muted);">Внеси го бројот од баркодот рачно подолу или пополни ги нутритивните вредности директно.</span>';
+        }
+      }
+
+      async function handleBarcodeDetected(rawBarcode) {
+        const barcode = String(rawBarcode || '').replace(/[^0-9A-Za-z-]/g, '').trim();
+        if (!barcode) return;
+
+        const lookupEl = document.getElementById('barcodeLookupStatus');
+        lookupEl.style.display = 'block';
+        lookupEl.textContent = `Се вчитуваат податоци за баркод ${barcode}...`;
+
+        const cachedItem = state.barcodeCache[barcode] || LOCAL_BARCODE_DB[barcode];
+        if (cachedItem) {
+          closeModal('barcodeModal');
+          openScannedEntryModal({
+            barcode,
+            name: cachedItem.name,
+            calories100: cachedItem.calories100,
+            protein100: cachedItem.protein100,
+            carbs100: cachedItem.carbs100,
+            fats100: cachedItem.fats100
+          });
+          showToast(`Пронајдено (од кеш): ${cachedItem.name}`);
+          return;
+        }
+
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const response = await fetch(
+            `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeoutId);
+          const data = await response.json();
+
+          if (data && data.status === 1 && data.product) {
+            const p = data.product;
+            const n = p.nutriments || {};
+            const productName = p.product_name_mk || p.product_name || p.generic_name || `Производ (${barcode})`;
+            const brand = p.brands ? ` - ${p.brands.split(',')[0].trim()}` : '';
+
+            const kcal100 = Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? (n['energy_100g'] ? n['energy_100g'] / 4.184 : 0)) || 0;
+            const pro100 = Number(n['proteins_100g'] ?? n['proteins'] ?? 0) || 0;
+            const carb100 = Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0) || 0;
+            const fat100 = Number(n['fat_100g'] ?? n['fat'] ?? 0) || 0;
+
+            const itemData = {
+              name: `${productName}${brand}`.trim(),
+              calories100: Math.round(kcal100 * 10) / 10,
+              protein100: Math.round(pro100 * 10) / 10,
+              carbs100: Math.round(carb100 * 10) / 10,
+              fats100: Math.round(fat100 * 10) / 10
+            };
+
+            state.barcodeCache[barcode] = itemData;
+            persistAllState();
+
+            closeModal('barcodeModal');
+            openScannedEntryModal({ barcode, ...itemData });
+            showToast('Производот е пронајден и зачуван!');
+          } else {
+            closeModal('barcodeModal');
+            openScannedEntryModal({
+              barcode,
+              name: `Производ (${barcode})`,
+              calories100: 0,
+              protein100: 0,
+              carbs100: 0,
+              fats100: 0
+            });
+            showToast('Баркодот не е во базата — внеси ги вредностите рачно');
+          }
+        } catch (err) {
+          closeModal('barcodeModal');
+          openScannedEntryModal({
+            barcode,
+            name: `Производ (${barcode})`,
+            calories100: 0,
+            protein100: 0,
+            carbs100: 0,
+            fats100: 0
+          });
+          showToast('Нема интернет врска — внеси ги вредностите рачно');
+        }
+      }
+
+      function openScannedEntryModal(item) {
+        scannedBasePer100g = {
+          calories: item.calories100,
+          protein: item.protein100,
+          carbs: item.carbs100,
+          fats: item.fats100
+        };
+
+        document.getElementById('entryModalTitle').textContent = 'Скениран производ';
+        document.getElementById('entryForm').reset();
+        document.getElementById('entryId').value = '';
+        document.getElementById('entryScannedBarcode').value = item.barcode || '';
+        document.getElementById('entryName').value = item.name;
+        document.getElementById('entryCalories').value = item.calories100 || '';
+        document.getElementById('entryProtein').value = item.protein100 || '';
+        document.getElementById('entryCarbs').value = item.carbs100 || '';
+        document.getElementById('entryFats').value = item.fats100 || '';
+        document.getElementById('entryFiber').value = '';
+        document.getElementById('entryPortionGrams').value = '100';
+        document.getElementById('scannedBarcodeCode').textContent = `#${item.barcode}`;
+        document.getElementById('barcodePortionBox').style.display = 'block';
+        document.getElementById('saveAsPresetWrapper').style.display = 'flex';
+        openModal('entryModal');
+      }
+
+      function recalculateFromPortion() {
+        if (!scannedBasePer100g) return;
+        const grams = parseDecimalInput(document.getElementById('entryPortionGrams').value);
+        const factor = grams / 100;
+        document.getElementById('entryCalories').value = fmtNum(scannedBasePer100g.calories * factor);
+        document.getElementById('entryProtein').value = fmtNum(scannedBasePer100g.protein * factor);
+        document.getElementById('entryCarbs').value = fmtNum(scannedBasePer100g.carbs * factor);
+        document.getElementById('entryFats').value = fmtNum(scannedBasePer100g.fats * factor);
+      }
+
+      function calculateTdeeGoals() {
+        const gender = document.getElementById('tdeeGender').value;
+        const age = parseDecimalInput(document.getElementById('tdeeAge').value) || 28;
+        const weight = parseDecimalInput(document.getElementById('tdeeWeight').value) || 80;
+        const height = parseDecimalInput(document.getElementById('tdeeHeight').value) || 180;
+        const activity = parseFloat(document.getElementById('tdeeActivity').value) || 1.55;
+        const goalType = document.getElementById('tdeeGoalType').value;
+
+        let bmr = 10 * weight + 6.25 * height - 5 * age + (gender === 'male' ? 5 : -161);
+        let tdee = bmr * activity;
+
+        if (goalType === 'cut') tdee -= 450;
+        if (goalType === 'bulk') tdee += 300;
+
+        const targetCalories = Math.max(1200, Math.round(tdee / 10) * 10);
+        const proteinMultiplier = goalType === 'cut' ? 2.2 : 2.0;
+        const targetProtein = Math.round(weight * proteinMultiplier);
+        const targetFats = Math.round((targetCalories * 0.25) / 9);
+        const remainingCalForCarbs = Math.max(0, targetCalories - (targetProtein * 4 + targetFats * 9));
+        const targetCarbs = Math.round(remainingCalForCarbs / 4);
+        const targetWater = Math.round((weight * 35) / 50) * 50;
+
+        document.getElementById('goalCalories').value = targetCalories;
+        document.getElementById('goalProtein').value = targetProtein;
+        document.getElementById('goalCarbs').value = targetCarbs;
+        document.getElementById('goalFats').value = targetFats;
+        document.getElementById('goalWater').value = targetWater;
+
+        showToast('Пресметано! Провери и кликни „Зачувај цели“');
+      }
+
+      function renderProfileHeader() {
+        const prof = state.profile || DEFAULT_PROFILE;
+        const nameText = (prof.name || 'Мој акаунт').trim();
+        document.getElementById('headerUserName').textContent = nameText;
+        document.getElementById('headerUserGoalSub').textContent = (prof.bio || 'Личен дневник за калории и протеини').trim();
+
+        const initial = nameText.charAt(0).toUpperCase() || 'М';
+        const headerImg = document.getElementById('headerAvatarImg');
+        const headerFallback = document.getElementById('headerAvatarFallback');
+        headerFallback.textContent = initial;
+
+        if (prof.avatar) {
+          headerImg.src = prof.avatar;
+          headerImg.style.display = 'block';
+          headerFallback.style.display = 'none';
+        } else {
+          headerImg.removeAttribute('src');
+          headerImg.style.display = 'none';
+          headerFallback.style.display = 'block';
+        }
+      }
+
+      function openProfileModal() {
+        const prof = state.profile || DEFAULT_PROFILE;
+        document.getElementById('profileName').value = prof.name || '';
+        document.getElementById('profileBio').value = prof.bio || '';
+        updateProfileModalPreview(prof.avatar || '', prof.name || 'М');
+        openModal('profileModal');
+      }
+
+      function updateProfileModalPreview(avatarDataUrl, nameStr) {
+        const img = document.getElementById('profilePreviewImg');
+        const fallback = document.getElementById('profilePreviewFallback');
+        fallback.textContent = (nameStr || 'М').trim().charAt(0).toUpperCase() || 'М';
+
+        if (avatarDataUrl) {
+          img.src = avatarDataUrl;
+          img.style.display = 'block';
+          fallback.style.display = 'none';
+        } else {
+          img.removeAttribute('src');
+          img.style.display = 'none';
+          fallback.style.display = 'block';
+        }
+      }
+
+      function handleAvatarUpload(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxDim = 240;
+            let w = img.width;
+            let h = img.height;
+            if (w > h && w > maxDim) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else if (h >= w && h > maxDim) {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            document.getElementById('profileModal').dataset.pendingAvatar = compressedDataUrl;
+            updateProfileModalPreview(compressedDataUrl, document.getElementById('profileName').value);
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function shiftStatsMonth(deltaMonths) {
+        const [y, m] = state.statsMonth.split('-').map(Number);
+        const dt = new Date(y, m - 1 + deltaMonths, 1);
+        state.statsMonth = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+        renderMonthlyStats();
+      }
+
+      function renderMonthlyChart(year, month, calMap) {
+        const container = document.getElementById('monthlyChartContainer');
+        const goalCal = Number(state.goals.calories) || 2200;
+        document.getElementById('chartGoalLineLabel').textContent = fmtNum(goalCal);
+
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const maxVal = Math.max(goalCal * 1.15, ...Object.values(calMap), 100);
+
+        const svgW = Math.max(460, daysInMonth * 16);
+        const svgH = 110;
+        const padBottom = 18;
+        const plotH = svgH - padBottom - 8;
+
+        const goalY = 8 + plotH - (goalCal / maxVal) * plotH;
+
+        let barsHtml = '';
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const val = calMap[dateKey] || 0;
+          const barH = val > 0 ? Math.max(4, (val / maxVal) * plotH) : 2;
+          const x = (day - 1) * 15 + 6;
+          const y = 8 + plotH - barH;
+          const fill = val === 0 ? '#334155' : val > goalCal * 1.05 ? '#f59e0b' : '#10b981';
+
+          barsHtml += `<rect x="${x}" y="${y}" width="10" height="${barH}" rx="3" fill="${fill}" opacity="${val === 0 ? '0.35' : '0.95'}" />`;
+          if (day === 1 || day % 5 === 0 || day === daysInMonth) {
+            barsHtml += `<text x="${x + 5}" y="${svgH - 4}" text-anchor="middle" font-size="9" fill="#94a3b8">${day}</text>`;
+          }
+        }
+
+        container.innerHTML = `
+          <svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" style="display:block; max-width:none;">
+            <line x1="0" y1="${goalY}" x2="${svgW}" y2="${goalY}" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.7" />
+            ${barsHtml}
+          </svg>
+        `;
+      }
+
+      function renderMonthlyStats() {
+        const [y, m] = state.statsMonth.split('-').map(Number);
+        const monthsCapitalized = [
+          'Јануари', 'Февруари', 'Март', 'Април', 'Мај', 'Јуни',
+          'Јули', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'
+        ];
+        document.getElementById('statsMonthTitle').textContent = `${monthsCapitalized[m - 1]} ${y}`;
+
+        const dateInfoSelected = formatMacedonianDate(state.selectedDate);
+        document.getElementById('weightSelectedDateLabel').textContent = dateInfoSelected.title.toLowerCase();
+        const currentWeight = state.weights[state.selectedDate];
+        document.getElementById('inputDayWeight').value = currentWeight ? fmtNum(currentWeight) : '';
+
+        const weightKeys = Object.keys(state.weights).sort();
+        if (weightKeys.length > 0) {
+          const lastKey = weightKeys[weightKeys.length - 1];
+          document.getElementById('weightLatestSub').textContent = `Последно мерење: ${fmtNum(state.weights[lastKey])} кг (${lastKey})`;
+        } else {
+          document.getElementById('weightLatestSub').textContent = 'Нема внесено тежина';
+        }
+
+        const monthPrefix = `${state.statsMonth}-`;
+        const matchingDates = Object.keys(state.logs)
+          .filter((dateKey) => dateKey.startsWith(monthPrefix))
+          .sort();
+
+        let totalCal = 0;
+        let totalPro = 0;
+        let totalCarbs = 0;
+        let totalFats = 0;
+        let activeDaysCount = 0;
+        const calMap = {};
+        const daySummaries = [];
+
+        matchingDates.forEach((dateKey) => {
+          const entries = state.logs[dateKey] || [];
+          if (entries.length === 0) return;
+
+          const dayTotals = entries.reduce(
+            (acc, item) => {
+              acc.calories += Number(item.calories) || 0;
+              acc.protein += Number(item.protein) || 0;
+              acc.carbs += Number(item.carbs) || 0;
+              acc.fats += Number(item.fats) || 0;
+              return acc;
+            },
+            { calories: 0, protein: 0, carbs: 0, fats: 0 }
+          );
+
+          calMap[dateKey] = dayTotals.calories;
+          activeDaysCount += 1;
+          totalCal += dayTotals.calories;
+          totalPro += dayTotals.protein;
+          totalCarbs += dayTotals.carbs;
+          totalFats += dayTotals.fats;
+
+          daySummaries.push({
+            dateKey,
+            count: entries.length,
+            weight: state.weights[dateKey],
+            ...dayTotals
+          });
+        });
+
+        renderMonthlyChart(y, m, calMap);
+
+        const divisor = activeDaysCount > 0 ? activeDaysCount : 1;
+        document.getElementById('statAvgCalories').textContent = `${fmtNum(activeDaysCount ? totalCal / divisor : 0)} kcal`;
+        document.getElementById('statTotalCalories').textContent = `Вкупно: ${fmtNum(totalCal)} kcal`;
+
+        document.getElementById('statAvgProtein').textContent = `${fmtNum(activeDaysCount ? totalPro / divisor : 0)} г`;
+        document.getElementById('statTotalProtein').textContent = `Вкупно: ${fmtNum(totalPro)} г`;
+
+        document.getElementById('statActiveDays').textContent = String(activeDaysCount);
+        document.getElementById('statAvgCarbsFats').textContent =
+          `${fmtNum(activeDaysCount ? totalCarbs / divisor : 0)}г ЈХ • ${fmtNum(activeDaysCount ? totalFats / divisor : 0)}г М`;
+
+        const listEl = document.getElementById('monthlyDaysList');
+        listEl.innerHTML = '';
+
+        if (daySummaries.length === 0) {
+          listEl.innerHTML = `<div class="subcard" style="padding:1.25rem; text-align:center; font-size:0.75rem; color:var(--text-muted);">Нема зачувани оброци за избраниот месец.</div>`;
+          return;
+        }
+
+        daySummaries.reverse().forEach((day) => {
+          const dateInfo = formatMacedonianDate(day.dateKey);
+          const weightBadge = day.weight ? ` • <strong style="color:#fbbf24;">${fmtNum(day.weight)} кг</strong>` : '';
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'subcard';
+          row.style.cssText = 'width:100%; text-align:left; padding:0.7rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; cursor:pointer;';
+          row.innerHTML = `
+            <div>
+              <div style="font-size:0.78rem; font-weight:700;">${escapeHtml(dateInfo.title)} <span style="font-weight:400; color:var(--text-muted);">(${escapeHtml(day.dateKey)})</span>${weightBadge}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">
+                <strong style="color:#10b981;">${fmtNum(day.calories)} kcal</strong> •
+                <strong style="color:#38bdf8;">${fmtNum(day.protein)}г П</strong> •
+                ${fmtNum(day.carbs)}г ЈХ • ${fmtNum(day.fats)}г М
+              </div>
+            </div>
+            <span style="font-size:0.7rem; color:var(--text-muted); flex-shrink:0;">${day.count} ставки</span>
+          `;
+          row.addEventListener('click', () => {
+            state.selectedDate = day.dateKey;
+            renderAll();
+            closeModal('monthlyStatsModal');
+            showToast(`Прикажан ${dateInfo.title}`);
+          });
+          listEl.appendChild(row);
+        });
+      }
+
+      function resetPresetForm() {
+        document.getElementById('presetEditId').value = '';
+        document.getElementById('presetFormTitle').textContent = 'Додај нов шаблон';
+        document.getElementById('btnSubmitPreset').textContent = '+ Зачувај шаблон';
+        document.getElementById('btnCancelPresetEdit').style.display = 'none';
+        document.getElementById('presetForm').reset();
+      }
+
+      function renderDateHeader() {
+        const info = formatMacedonianDate(state.selectedDate);
+        document.getElementById('selectedDateLabel').textContent = info.title;
+        document.getElementById('selectedDateSub').textContent = info.sub;
+
+        const btnToday = document.getElementById('btnToday');
+        btnToday.style.display = info.isToday ? 'none' : 'inline-block';
+      }
+
+      function renderSummary() {
+        const dayEntries = state.logs[state.selectedDate] || [];
+        const totals = dayEntries.reduce(
+          (acc, item) => {
+            acc.calories += Number(item.calories) || 0;
+            acc.protein += Number(item.protein) || 0;
+            acc.carbs += Number(item.carbs) || 0;
+            acc.fats += Number(item.fats) || 0;
+            acc.fiber += Number(item.fiber) || 0;
+            return acc;
+          },
+          { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }
+        );
+
+        const g = state.goals;
+
+        document.getElementById('calConsumed').textContent = fmtNum(totals.calories);
+        document.getElementById('calTarget').textContent = fmtNum(g.calories);
+        const calRem = g.calories - totals.calories;
+        const calRemEl = document.getElementById('calRemaining');
+        if (calRem >= 0) {
+          calRemEl.textContent = `${fmtNum(calRem)} kcal`;
+          calRemEl.style.color = '#10b981';
+        } else {
+          calRemEl.textContent = `+${fmtNum(Math.abs(calRem))} kcal над цел`;
+          calRemEl.style.color = '#f59e0b';
+        }
+        const calPct = g.calories > 0 ? Math.min(100, (totals.calories / g.calories) * 100) : 0;
+        document.getElementById('calProgress').style.width = `${calPct}%`;
+
+        document.getElementById('proConsumed').textContent = fmtNum(totals.protein);
+        document.getElementById('proTarget').textContent = fmtNum(g.protein);
+        const proRem = g.protein - totals.protein;
+        const proRemEl = document.getElementById('proRemaining');
+        if (proRem > 0) {
+          proRemEl.textContent = `${fmtNum(proRem)} г`;
+          proRemEl.style.color = '#38bdf8';
+        } else {
+          proRemEl.textContent = `Целта е исполнета!`;
+          proRemEl.style.color = '#10b981';
+        }
+        const proPct = g.protein > 0 ? Math.min(100, (totals.protein / g.protein) * 100) : 0;
+        document.getElementById('proProgress').style.width = `${proPct}%`;
+
+        document.getElementById('carbConsumed').textContent = fmtNum(totals.carbs);
+        document.getElementById('carbTarget').textContent = fmtNum(g.carbs);
+        const carbRem = Math.max(0, g.carbs - totals.carbs);
+        document.getElementById('carbRemaining').textContent = `Останато: ${fmtNum(carbRem)} г`;
+        const carbPct = g.carbs > 0 ? Math.min(100, (totals.carbs / g.carbs) * 100) : 0;
+        document.getElementById('carbProgress').style.width = `${carbPct}%`;
+
+        document.getElementById('fatConsumed').textContent = fmtNum(totals.fats);
+        document.getElementById('fatTarget').textContent = fmtNum(g.fats);
+        const fatRem = Math.max(0, g.fats - totals.fats);
+        document.getElementById('fatRemaining').textContent = `Останато: ${fmtNum(fatRem)} г`;
+        const fatPct = g.fats > 0 ? Math.min(100, (totals.fats / g.fats) * 100) : 0;
+        document.getElementById('fatProgress').style.width = `${fatPct}%`;
+
+        document.getElementById('fiberConsumed').textContent = fmtNum(totals.fiber);
+
+        const currentWater = Number(state.water[state.selectedDate]) || 0;
+        const targetWater = Number(g.water) || DEFAULT_GOALS.water;
+        document.getElementById('waterConsumed').textContent = fmtNum(currentWater);
+        document.getElementById('waterTarget').textContent = fmtNum(targetWater);
+        const waterPct = targetWater > 0 ? Math.min(100, (currentWater / targetWater) * 100) : 0;
+        document.getElementById('waterProgress').style.width = `${waterPct}%`;
+      }
+
+      function adjustWater(deltaMl) {
+        const current = Number(state.water[state.selectedDate]) || 0;
+        state.water[state.selectedDate] = Math.max(0, current + deltaMl);
+        persistAllState();
+        renderSummary();
+        if (deltaMl > 0) {
+          showToast(`+${deltaMl} мл вода`);
+        }
+      }
+
+      function renderPresets() {
+        const container = document.getElementById('presetsContainer');
+        const searchWrap = document.getElementById('presetSearchWrapper');
+        container.innerHTML = '';
+
+        searchWrap.style.display = (state.presets.length <= 4 && !state.presetFilter) ? 'none' : 'block';
+
+        const q = state.presetFilter.trim().toLowerCase();
+        const filtered = q
+          ? state.presets.filter((p) => p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q))
+          : state.presets;
+
+        if (filtered.length === 0) {
+          container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:1rem; font-size:0.75rem; color:var(--text-muted);">Нема пронајдени шаблони.</div>`;
+          return;
+        }
+
+        filtered.forEach((preset) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.cssText = 'padding:0.75rem; border-radius:1.15rem; display:flex; flex-direction:column; justify-content:space-between; gap:0.5rem;';
+          card.innerHTML = `
+            <div data-preset-add style="cursor:pointer;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.4rem; margin-bottom:0.35rem;">
+                <span style="font-size:0.78rem; font-weight:700; line-height:1.25;">${escapeHtml(preset.name)}</span>
+                <span style="width:1.4rem; height:1.4rem; border-radius:0.5rem; background:rgba(16,185,129,0.16); color:#10b981; display:inline-flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">+</span>
+              </div>
+              <div style="font-size:0.7rem; color:var(--text-muted);">
+                <span>${fmtNum(preset.calories)} kcal</span> • <strong style="color:#38bdf8;">${fmtNum(preset.protein)}г П</strong>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.35rem; padding-top:0.35rem; border-top:1px solid var(--border-soft);">
+              <button type="button" data-preset-edit style="background:none; border:none; color:var(--text-muted); font-size:0.7rem; font-weight:600; cursor:pointer;">Уреди</button>
+              <button type="button" data-preset-del style="background:none; border:none; color:#fb7185; font-size:0.7rem; font-weight:600; cursor:pointer;">Избриши</button>
+            </div>
+          `;
+
+          card.querySelector('[data-preset-add]').addEventListener('click', () => addQuickPreset(preset));
+          card.querySelector('[data-preset-edit]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            renderPresetsManageList();
+            startEditPreset(preset);
+            openModal('presetsModal');
+          });
+          card.querySelector('[data-preset-del]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const deletedBackup = { ...preset };
+            const deletedIndex = state.presets.findIndex((p) => p.id === preset.id);
+            state.presets = state.presets.filter((p) => p.id !== preset.id);
+            persistAllState();
+            renderPresets();
+            showToast('Шаблонот е избришан', () => {
+              state.presets.splice(Math.max(0, deletedIndex), 0, deletedBackup);
+              persistAllState();
+              renderPresets();
+              showToast('Шаблонот е вратен');
+            });
+          });
+
+          container.appendChild(card);
+        });
+      }
+
+      function startEditPreset(preset) {
+        document.getElementById('presetEditId').value = preset.id;
+        document.getElementById('presetFormTitle').textContent = 'Уреди шаблон';
+        document.getElementById('presetName').value = preset.name;
+        document.getElementById('presetCategory').value = preset.category || 'Ужина/Суплементи';
+        document.getElementById('presetCalories').value = preset.calories;
+        document.getElementById('presetProtein').value = preset.protein;
+        document.getElementById('presetCarbs').value = preset.carbs || '';
+        document.getElementById('presetFats').value = preset.fats || '';
+        document.getElementById('btnSubmitPreset').textContent = 'Зачувај промени';
+        document.getElementById('btnCancelPresetEdit').style.display = 'inline';
+      }
+
+      function renderPresetsManageList() {
+        const list = document.getElementById('presetsManageList');
+        list.innerHTML = '';
+
+        if (state.presets.length === 0) {
+          list.innerHTML = `<p style="text-align:center; font-size:0.75rem; color:var(--text-muted);">Нема зачувани шаблони.</p>`;
+          return;
+        }
+
+        state.presets.forEach((preset) => {
+          const row = document.createElement('div');
+          row.className = 'subcard';
+          row.style.cssText = 'padding:0.65rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem;';
+          row.innerHTML = `
+            <div style="min-width:0; flex:1;">
+              <div style="font-size:0.8rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(preset.name)}</div>
+              <div style="font-size:0.7rem; color:var(--text-muted);">${fmtNum(preset.calories)} kcal • ${fmtNum(preset.protein)}г П • ${fmtNum(preset.carbs)}г ЈХ • ${fmtNum(preset.fats)}г М</div>
+            </div>
+            <div style="display:flex; gap:0.35rem; flex-shrink:0;">
+              <button type="button" data-preset-action="edit" class="btn-secondary" style="padding:0.35rem 0.6rem; font-size:0.72rem;">Уреди</button>
+              <button type="button" data-preset-action="delete" class="btn-secondary" style="padding:0.35rem 0.6rem; font-size:0.72rem; color:#fb7185;">✕</button>
+            </div>
+          `;
+          row.querySelector('[data-preset-action="edit"]').addEventListener('click', () => startEditPreset(preset));
+          row.querySelector('[data-preset-action="delete"]').addEventListener('click', () => {
+            if (document.getElementById('presetEditId').value === preset.id) {
+              resetPresetForm();
+            }
+            state.presets = state.presets.filter((p) => p.id !== preset.id);
+            persistAllState();
+            renderPresets();
+            renderPresetsManageList();
+            showToast('Шаблонот е избришан');
+          });
+          list.appendChild(row);
+        });
+      }
+
+      function copyEntriesFromPreviousDay() {
+        const prevDate = getPreviousDateISO(state.selectedDate);
+        const prevEntries = state.logs[prevDate] || [];
+        if (prevEntries.length === 0) {
+          showToast('Нема оброци во претходниот ден');
+          return;
+        }
+
+        if (!state.logs[state.selectedDate]) {
+          state.logs[state.selectedDate] = [];
+        }
+
+        const cloned = prevEntries.map((item, idx) => ({
+          ...item,
+          id: 'entry-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 5)
+        }));
+
+        state.logs[state.selectedDate].push(...cloned);
+        persistAllState();
+        renderSummary();
+        renderEntries();
+        showToast(`Копирани ${cloned.length} оброци од вчера!`);
+      }
+
+      function renderEntries() {
+        const container = document.getElementById('entriesContainer');
+        const dayEntries = state.logs[state.selectedDate] || [];
+        const prevDate = getPreviousDateISO(state.selectedDate);
+        const prevEntries = state.logs[prevDate] || [];
+
+        document.getElementById('entriesCount').textContent = dayEntries.length;
+
+        const btnCopyTop = document.getElementById('btnCopyYesterdayTop');
+        btnCopyTop.style.display = prevEntries.length > 0 ? 'inline-block' : 'none';
+
+        if (dayEntries.length === 0) {
+          const copyCtaHtml = prevEntries.length > 0
+            ? `<button id="btnCopyYesterdayEmpty" type="button" class="btn-primary" style="margin-top:0.75rem; padding:0.55rem 1rem; font-size:0.75rem; background:#0284c7;">
+                Копирај ги оброците од вчера (${prevEntries.length})
+              </button>`
+            : '';
+
+          container.innerHTML = `
+            <div class="card" style="padding:1.75rem; text-align:center; border-style:dashed;">
+              <p style="margin:0 0 0.25rem; font-size:0.85rem; font-weight:700;">Нема внесено оброци за овој ден</p>
+              <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">Избери од базата на храна, „Брз внес“ или „Додај оброк“.</p>
+              ${copyCtaHtml}
+            </div>
+          `;
+
+          const emptyCopyBtn = document.getElementById('btnCopyYesterdayEmpty');
+          if (emptyCopyBtn) {
+            emptyCopyBtn.addEventListener('click', copyEntriesFromPreviousDay);
+          }
+          return;
+        }
+
+        container.innerHTML = '';
+
+        CATEGORIES.forEach((cat) => {
+          const items = dayEntries.filter((e) => e.category === cat);
+          if (items.length === 0) return;
+
+          const catCalories = items.reduce((s, i) => s + (Number(i.calories) || 0), 0);
+          const catProtein = items.reduce((s, i) => s + (Number(i.protein) || 0), 0);
+
+          const groupEl = document.createElement('div');
+          groupEl.className = 'card';
+          groupEl.style.overflow = 'hidden';
+
+          groupEl.innerHTML = `
+            <div style="padding:0.7rem 1rem; background:var(--bg-subcard); border-bottom:1px solid var(--border-soft); display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">${escapeHtml(cat)}</span>
+              <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">${fmtNum(catCalories)} kcal • <strong style="color:#38bdf8;">${fmtNum(catProtein)}г П</strong></span>
+            </div>
+            <div data-group-list></div>
+          `;
+
+          const listEl = groupEl.querySelector('[data-group-list]');
+
+          items.forEach((entry, idx) => {
+            const fiberVal = Number(entry.fiber) || 0;
+            const fiberText = fiberVal > 0 ? ` • ${fmtNum(fiberVal)}г Вл` : '';
+            const itemRow = document.createElement('div');
+            itemRow.style.cssText = `padding:0.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; ${idx > 0 ? 'border-top:1px solid var(--border-soft);' : ''}`;
+            itemRow.innerHTML = `
+              <div style="min-width:0; flex:1;">
+                <div style="font-size:0.86rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(entry.name)}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">
+                  <strong>${fmtNum(entry.calories)} kcal</strong> •
+                  <strong style="color:#38bdf8;">${fmtNum(entry.protein)}г П</strong> •
+                  ${fmtNum(entry.carbs)}г ЈХ • ${fmtNum(entry.fats)}г М${fiberText}
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+                <button type="button" data-action="edit" class="btn-secondary" style="padding:0.4rem 0.65rem; font-size:0.72rem;">Уреди</button>
+                <button type="button" data-action="delete" class="btn-secondary" style="padding:0.4rem 0.65rem; font-size:0.72rem; color:#fb7185;">✕</button>
+              </div>
+            `;
+
+            itemRow.querySelector('[data-action="edit"]').addEventListener('click', () => openEditEntryModal(entry));
+            itemRow.querySelector('[data-action="delete"]').addEventListener('click', () => deleteEntry(entry.id));
+
+            listEl.appendChild(itemRow);
+          });
+
+          container.appendChild(groupEl);
+        });
+      }
+
+      function addQuickPreset(preset) {
+        if (!state.logs[state.selectedDate]) {
+          state.logs[state.selectedDate] = [];
+        }
+        state.logs[state.selectedDate].push({
+          id: 'entry-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          name: preset.name,
+          category: preset.category || 'Ужина/Суплементи',
+          calories: Number(preset.calories) || 0,
+          protein: Number(preset.protein) || 0,
+          carbs: Number(preset.carbs) || 0,
+          fats: Number(preset.fats) || 0,
+          fiber: Number(preset.fiber) || 0
+        });
+        persistAllState();
+        renderSummary();
+        renderEntries();
+        showToast(`Додадено: ${preset.name}`);
+      }
+
+      function openNewEntryModal() {
+        scannedBasePer100g = null;
+        document.getElementById('barcodePortionBox').style.display = 'none';
+        document.getElementById('entryModalTitle').textContent = 'Нов внес';
+        document.getElementById('entryForm').reset();
+        document.getElementById('entryId').value = '';
+        document.getElementById('entryScannedBarcode').value = '';
+        document.getElementById('saveAsPresetWrapper').style.display = 'flex';
+        openModal('entryModal');
+      }
+
+      function openEditEntryModal(entry) {
+        scannedBasePer100g = null;
+        document.getElementById('barcodePortionBox').style.display = 'none';
+        document.getElementById('entryModalTitle').textContent = 'Уреди внес';
+        document.getElementById('entryId').value = entry.id;
+        document.getElementById('entryScannedBarcode').value = '';
+        document.getElementById('entryName').value = entry.name;
+        document.getElementById('entryCategory').value = entry.category;
+        document.getElementById('entryCalories').value = entry.calories;
+        document.getElementById('entryProtein').value = entry.protein;
+        document.getElementById('entryCarbs').value = entry.carbs || '';
+        document.getElementById('entryFats').value = entry.fats || '';
+        document.getElementById('entryFiber').value = entry.fiber || '';
+        document.getElementById('saveAsPresetWrapper').style.display = 'none';
+        openModal('entryModal');
+      }
+
+      function deleteEntry(entryId) {
+        const targetDate = state.selectedDate;
+        const current = state.logs[targetDate] || [];
+        const deletedIndex = current.findIndex((e) => e.id === entryId);
+        if (deletedIndex === -1) return;
+
+        const deletedBackup = { ...current[deletedIndex] };
+        state.logs[targetDate] = current.filter((e) => e.id !== entryId);
+        persistAllState();
+        renderSummary();
+        renderEntries();
+
+        showToast(`Избришано: ${deletedBackup.name}`, () => {
+          if (!state.logs[targetDate]) state.logs[targetDate] = [];
+          state.logs[targetDate].splice(Math.min(deletedIndex, state.logs[targetDate].length), 0, deletedBackup);
+          persistAllState();
+          renderSummary();
+          renderEntries();
+          showToast('Ставката е вратена!');
+        });
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function initTheme() {
+        const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+        if (savedTheme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      }
+
+      function toggleTheme() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+      }
+
+      function renderAll() {
+        renderProfileHeader();
+        renderDateHeader();
+        renderSummary();
+        renderPresets();
+        renderEntries();
+      }
+
+      function openFoodDbModal() {
+        populateFoodDbCategories();
+        renderFoodDbSubcategories();
+        renderFoodDbItems();
+        openModal('foodDbModal');
+      }
+
+      // Bind all UI event listeners reliably
+      function bindEvents() {
+        document.getElementById('btnPrevDay').addEventListener('click', () => shiftDate(-1));
+        document.getElementById('btnNextDay').addEventListener('click', () => shiftDate(1));
+        document.getElementById('btnToday').addEventListener('click', () => {
+          state.selectedDate = getTodayISO();
+          renderAll();
+        });
+
+        document.querySelectorAll('#btnOpenFoodDbTop, #btnOpenFoodDbBottom').forEach((btn) => {
+          btn.addEventListener('click', openFoodDbModal);
+        });
+        document.getElementById('foodDbSearchInput').addEventListener('input', (e) => {
+          state.foodDbSearch = e.target.value;
+          renderFoodDbItems();
+        });
+        document.getElementById('foodDbCategorySelect').addEventListener('change', (e) => {
+          state.foodDbCategory = e.target.value;
+          state.foodDbSubcategory = 'ALL';
+          renderFoodDbSubcategories();
+          renderFoodDbItems();
+        });
+        document.getElementById('btnModeGrams').addEventListener('click', () => setFoodDbMode('grams'));
+        document.getElementById('btnModeUnit').addEventListener('click', () => setFoodDbMode('unit'));
+        document.getElementById('foodDbGramsInput').addEventListener('input', updateFoodDbCalculation);
+        document.getElementById('foodDbPiecesInput').addEventListener('input', updateFoodDbCalculation);
+        document.getElementById('foodDbAvgWeightInput').addEventListener('input', updateFoodDbCalculation);
+        document.getElementById('btnAddSelectedFoodToLog').addEventListener('click', addConfiguredFoodToLog);
+
+        document.getElementById('toastUndoBtn').addEventListener('click', () => {
+          if (typeof pendingUndoCallback === 'function') {
+            const fn = pendingUndoCallback;
+            pendingUndoCallback = null;
+            fn();
+          }
+        });
+
+        document.getElementById('btnWaterPlus').addEventListener('click', () => adjustWater(250));
+        document.getElementById('btnWaterMinus').addEventListener('click', () => adjustWater(-250));
+        document.getElementById('btnCopyYesterdayTop').addEventListener('click', copyEntriesFromPreviousDay);
+
+        document.getElementById('presetSearchInput').addEventListener('input', (e) => {
+          state.presetFilter = e.target.value;
+          renderPresets();
+        });
+
+        document.getElementById('btnOpenProfile').addEventListener('click', openProfileModal);
+        document.getElementById('inputProfileAvatar').addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleAvatarUpload(e.target.files[0]);
+            e.target.value = '';
+          }
+        });
+        document.getElementById('profileName').addEventListener('input', (e) => {
+          const currentPending = document.getElementById('profileModal').dataset.pendingAvatar;
+          const activeAvatar = currentPending !== undefined ? currentPending : (state.profile?.avatar || '');
+          updateProfileModalPreview(activeAvatar, e.target.value);
+        });
+        document.getElementById('btnRemoveAvatar').addEventListener('click', () => {
+          document.getElementById('profileModal').dataset.pendingAvatar = '';
+          updateProfileModalPreview('', document.getElementById('profileName').value);
+        });
+        document.getElementById('profileForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const modalEl = document.getElementById('profileModal');
+          const pendingAvatar = modalEl.dataset.pendingAvatar;
+          const finalAvatar = pendingAvatar !== undefined ? pendingAvatar : (state.profile?.avatar || '');
+
+          state.profile = {
+            name: document.getElementById('profileName').value.trim() || 'Мој акаунт',
+            bio: document.getElementById('profileBio').value.trim() || 'Личен дневник за калории и протеини',
+            avatar: finalAvatar
+          };
+          delete modalEl.dataset.pendingAvatar;
+          persistAllState();
+          renderProfileHeader();
+          closeModal('profileModal');
+          showToast('Профилот е зачуван');
+        });
+
+        document.getElementById('btnOpenMonthlyStats').addEventListener('click', () => {
+          state.statsMonth = state.selectedDate.slice(0, 7);
+          renderMonthlyStats();
+          openModal('monthlyStatsModal');
+        });
+        document.getElementById('btnPrevMonth').addEventListener('click', () => shiftStatsMonth(-1));
+        document.getElementById('btnNextMonth').addEventListener('click', () => shiftStatsMonth(1));
+        document.getElementById('weightLogForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const wVal = parseDecimalInput(document.getElementById('inputDayWeight').value);
+          if (wVal > 0) {
+            state.weights[state.selectedDate] = wVal;
+            showToast(`Зачувана тежина: ${fmtNum(wVal)} кг`);
+          } else {
+            delete state.weights[state.selectedDate];
+            showToast('Тежината за денот е отстранета');
+          }
+          persistAllState();
+          renderMonthlyStats();
+        });
+
+        document.getElementById('btnThemeToggle').addEventListener('click', toggleTheme);
+
+        document.getElementById('btnOpenGoals').addEventListener('click', () => {
+          document.getElementById('goalCalories').value = state.goals.calories;
+          document.getElementById('goalProtein').value = state.goals.protein;
+          document.getElementById('goalCarbs').value = state.goals.carbs;
+          document.getElementById('goalFats').value = state.goals.fats;
+          document.getElementById('goalWater').value = state.goals.water || DEFAULT_GOALS.water;
+          openModal('goalsModal');
+        });
+
+        document.getElementById('btnToggleTdeeCalc').addEventListener('click', () => {
+          const panel = document.getElementById('tdeeCalcPanel');
+          const chev = document.getElementById('tdeeChevron');
+          const isHidden = panel.style.display === 'none';
+          panel.style.display = isHidden ? 'block' : 'none';
+          chev.textContent = isHidden ? '▲' : '▼';
+        });
+
+        document.getElementById('btnCalculateTdee').addEventListener('click', calculateTdeeGoals);
+
+        document.getElementById('goalsForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          state.goals = {
+            calories: parseDecimalInput(document.getElementById('goalCalories').value) || DEFAULT_GOALS.calories,
+            protein: parseDecimalInput(document.getElementById('goalProtein').value) || DEFAULT_GOALS.protein,
+            carbs: parseDecimalInput(document.getElementById('goalCarbs').value) || DEFAULT_GOALS.carbs,
+            fats: parseDecimalInput(document.getElementById('goalFats').value) || DEFAULT_GOALS.fats,
+            water: parseDecimalInput(document.getElementById('goalWater').value) || DEFAULT_GOALS.water
+          };
+          persistAllState();
+          closeModal('goalsModal');
+          renderSummary();
+          showToast('Дневните цели се ажурирани');
+        });
+
+        document.getElementById('btnOpenEntryModal').addEventListener('click', openNewEntryModal);
+        document.getElementById('btnAddCustomTop').addEventListener('click', openNewEntryModal);
+
+        document.getElementById('btnOpenBarcodeModal').addEventListener('click', () => {
+          openModal('barcodeModal');
+          startBarcodeScanner();
+        });
+        document.getElementById('btnScanInsideEntry').addEventListener('click', () => {
+          closeModal('entryModal');
+          openModal('barcodeModal');
+          startBarcodeScanner();
+        });
+        document.getElementById('barcodePhotoInput').addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            scanBarcodeFromPhoto(e.target.files[0]);
+            e.target.value = '';
+          }
+        });
+        document.getElementById('manualBarcodeForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const code = document.getElementById('manualBarcodeInput').value.trim();
+          if (!code) return;
+          await stopBarcodeScanner();
+          document.getElementById('manualBarcodeInput').value = '';
+          handleBarcodeDetected(code);
+        });
+        document.getElementById('entryPortionGrams').addEventListener('input', recalculateFromPortion);
+
+        document.getElementById('entryForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const editId = document.getElementById('entryId').value;
+          const scannedCode = document.getElementById('entryScannedBarcode').value.trim();
+          const payload = {
+            name: document.getElementById('entryName').value.trim(),
+            category: document.getElementById('entryCategory').value,
+            calories: parseDecimalInput(document.getElementById('entryCalories').value),
+            protein: parseDecimalInput(document.getElementById('entryProtein').value),
+            carbs: parseDecimalInput(document.getElementById('entryCarbs').value),
+            fats: parseDecimalInput(document.getElementById('entryFats').value),
+            fiber: parseDecimalInput(document.getElementById('entryFiber').value)
+          };
+
+          if (!payload.name) return;
+
+          if (scannedCode && !state.barcodeCache[scannedCode]) {
+            const grams = parseDecimalInput(document.getElementById('entryPortionGrams').value) || 100;
+            const factor = grams > 0 ? 100 / grams : 1;
+            state.barcodeCache[scannedCode] = {
+              name: payload.name,
+              calories100: Math.round(payload.calories * factor * 10) / 10,
+              protein100: Math.round(payload.protein * factor * 10) / 10,
+              carbs100: Math.round(payload.carbs * factor * 10) / 10,
+              fats100: Math.round(payload.fats * factor * 10) / 10
+            };
+          }
+
+          if (!state.logs[state.selectedDate]) {
+            state.logs[state.selectedDate] = [];
+          }
+
+          if (editId) {
+            state.logs[state.selectedDate] = state.logs[state.selectedDate].map((item) =>
+              item.id === editId ? { ...item, ...payload } : item
+            );
+            showToast('Промените се зачувани');
+          } else {
+            state.logs[state.selectedDate].push({
+              id: 'entry-' + Date.now(),
+              ...payload
+            });
+
+            if (document.getElementById('saveAsPresetCheckbox').checked) {
+              state.presets.push({
+                id: 'preset-' + Date.now(),
+                ...payload
+              });
+              renderPresets();
+            }
+            showToast('Оброк додаден во дневникот');
+          }
+
+          persistAllState();
+          closeModal('entryModal');
+          renderSummary();
+          renderEntries();
+        });
+
+        document.getElementById('btnManagePresets').addEventListener('click', () => {
+          resetPresetForm();
+          renderPresetsManageList();
+          openModal('presetsModal');
+        });
+
+        document.getElementById('btnCancelPresetEdit').addEventListener('click', resetPresetForm);
+
+        document.getElementById('presetForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const name = document.getElementById('presetName').value.trim();
+          if (!name) return;
+
+          const editId = document.getElementById('presetEditId').value;
+          const presetPayload = {
+            name,
+            category: document.getElementById('presetCategory').value,
+            calories: parseDecimalInput(document.getElementById('presetCalories').value),
+            protein: parseDecimalInput(document.getElementById('presetProtein').value),
+            carbs: parseDecimalInput(document.getElementById('presetCarbs').value),
+            fats: parseDecimalInput(document.getElementById('presetFats').value),
+            fiber: 0
+          };
+
+          if (editId) {
+            state.presets = state.presets.map((p) => (p.id === editId ? { ...p, ...presetPayload } : p));
+            showToast('Шаблонот е уреден');
+          } else {
+            state.presets.push({
+              id: 'preset-' + Date.now(),
+              ...presetPayload
+            });
+            showToast('Новиот шаблон е зачуван');
+          }
+
+          persistAllState();
+          resetPresetForm();
+          renderPresets();
+          renderPresetsManageList();
+        });
+
+        document.querySelectorAll('[data-close-modal]').forEach((btn) => {
+          const targetModal = btn.getAttribute('data-close-modal');
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal(targetModal);
+          });
+        });
+
+        ['foodDbModal', 'entryModal', 'goalsModal', 'presetsModal', 'profileModal', 'monthlyStatsModal', 'barcodeModal'].forEach((modalId) => {
+          const modal = document.getElementById(modalId);
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal(modalId);
+          });
+        });
+
+        window.addEventListener('pagehide', persistAllState);
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') persistAllState();
+        });
+      }
+
+      async function initApp() {
+        initAppIconsAndManifest();
+        initTheme();
+        attachDecimalSanitizers();
+        bindEvents();
+        renderAll();
+
+        const idbData = await loadFromIDB();
+        if (idbData && Object.keys(state.logs).length === 0 && idbData.logs && Object.keys(idbData.logs).length > 0) {
+          state.profile = idbData.profile || state.profile;
+          state.goals = { ...DEFAULT_GOALS, ...(idbData.goals || state.goals) };
+          state.logs = idbData.logs || state.logs;
+          state.presets = idbData.presets || state.presets;
+          state.water = idbData.water || state.water;
+          state.weights = idbData.weights || state.weights;
+          state.barcodeCache = idbData.barcodeCache || state.barcodeCache;
+          persistAllState();
+          renderAll();
+        } else {
+          persistAllState();
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initApp, { once: true });
+      } else {
+        initApp();
+      }
+    })();
+  </script>
+</body>
+</html>
